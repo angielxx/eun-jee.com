@@ -2,6 +2,52 @@
 @tailwind components;
 @tailwind utilities;
 
+@layer base {
+  /* light mode */
+  :root {
+    --color-bg: #fafafa;
+    --color-grey10: #e6e6e6;
+    --color-grey30: #b3b3b3;
+    --color-grey50: #808080;
+    --color-grey70: #595959;
+    --color-grey90: #333333;
+    --color-text: #1a1a1b;
+    --color-subtext: #b3b3b3;
+    /* primary color */
+    --color-p100: #c2ead0;
+    --color-p200: #9adcb2;
+    --color-p300: #6dd093;
+    --color-p400: #47c57c;
+    --color-p500: #09ba65;
+    --color-p600: #00aa5a;
+    --color-p700: #00984e;
+    --color-p800: #008742;
+    --color-p900: #00793b;
+  }
+  /* dark mode */
+  :root[class='dark'] {
+    --color-bg: #1a1a1b;
+    --color-grey10: #333333;
+    --color-grey30: #595959;
+    --color-grey50: #808080;
+    --color-grey70: #b3b3b3;
+    --color-grey90: #e6e6e6;
+    --color-text: #fafafa;
+    --color-subtext: #595959;
+    /* primary color */
+    --color-p900: #c2ead0;
+    --color-p800: #9adcb2;
+    --color-p700: #6dd093;
+    --color-p600: #47c57c;
+    --color-p500: #09ba65;
+    --color-p400: #00aa5a;
+    --color-p300: #00984e;
+    --color-p200: #008742;
+    --color-p100: #00793b;
+    --color-p100: #00793b;
+  }
+}
+
 :root {
   --foreground-rgb: 0, 0, 0;
   --background-start-rgb: 214, 219, 220;
@@ -10,9 +56,9 @@
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --foreground-rgb: 255, 255, 255;
-    --background-start-rgb: 0, 0, 0;
-    --background-end-rgb: 0, 0, 0;
+    --foreground-rgb: #fafafa;
+    --background-start-rgb: #fafafa;
+    --background-end-rgb: #fafafa;
   }
 }
 
