@@ -15,11 +15,11 @@ type stylesType = {
 };
 
 const commonStyle =
-  'text-base h-11 flex justify-center items-center px-3 bg-black text-text rounded-[12px]';
+  'text-base h-11 flex justify-center items-center px-3 bg-black rounded-[12px] tracking-wide';
 
 const styles: stylesType = {
-  default: '',
-  active: 'text-p500 font-bold',
+  default: 'text-text',
+  active: 'text-p500 font-extrabold',
   hover: 'hover:bg-grey10',
 };
 
