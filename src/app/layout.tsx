@@ -67,9 +67,9 @@ interface RootLayoutProps {
 export default function RootLayout({ children }: RootLayoutProps) {
   return (
     <html lang="en" className={`${pretendard.variable} font-sans`}>
-      <body>
+      <body className="flex flex-col justify-center items-center font-light leading-7">
         <Header />
-        <main>{children}</main>
+        <main className="w-1/2">{children}</main>
       </body>
     </html>
   );

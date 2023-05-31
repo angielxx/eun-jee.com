@@ -7,7 +7,9 @@ interface PageTitleProps {
 }
 
 const PageTitle = ({ title }: PageTitleProps) => {
-  return <h3>{title}</h3>;
+  return (
+    <h3 className="text-3xl font-extrabold text-p500 tracking-wide">{title}</h3>
+  );
 };
 
 export default PageTitle;
