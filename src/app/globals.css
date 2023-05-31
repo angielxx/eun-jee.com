@@ -4,7 +4,7 @@
 
 @layer base {
   /* light mode */
-  :root {
+  .light {
     --color-bg: #fafafa;
     --color-grey10: #e6e6e6;
     --color-grey30: #b3b3b3;
@@ -25,7 +25,7 @@
     --color-p900: #00793b;
   }
   /* dark mode */
-  :root[class='dark'] {
+  .dark {
     --color-bg: #1a1a1b;
     --color-grey10: #333333;
     --color-grey30: #595959;
@@ -48,13 +48,13 @@
   }
 }
 
-:root {
+/* :root {
   --foreground-rgb: 0, 0, 0;
   --background-start-rgb: 214, 219, 220;
   --background-end-rgb: 255, 255, 255;
-}
+} */
 
-@media (prefers-color-scheme: dark) {
+/* @media (prefers-color-scheme: dark) {
   :root {
     --foreground-rgb: #fafafa;
     --background-start-rgb: #fafafa;
@@ -70,4 +70,4 @@ body {
       rgb(var(--background-end-rgb))
     )
     rgb(var(--background-start-rgb));
-}
+} */
