@@ -15,12 +15,12 @@ type stylesType = {
 };
 
 const commonStyle =
-  'text-base h-11 flex justify-center px-4 py-3 bg-black text-p100';
+  'text-base h-11 flex justify-center items-center px-3 bg-black text-text rounded-[12px]';
 
 const styles: stylesType = {
   default: '',
-  active: '',
-  hover: 'hover:bg-grey30',
+  active: 'text-p500 font-bold',
+  hover: 'hover:bg-grey10',
 };
 
 const HeaderBtn = ({ href, title, status }: HeaderBtnProps) => {
