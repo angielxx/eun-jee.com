@@ -50,9 +50,9 @@
 
 ::-moz-selection {
   color: var(--color-bg);
-  background-color: var(--color-p800);
+  background-color: var(--color-p200);
 }
 ::selection {
   color: var(--color-bg);
-  background-color: var(--color-p800);
+  background-color: var(--color-p200);
 }
