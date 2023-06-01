@@ -1,4 +1,5 @@
 import { defineDocumentType, makeSource } from 'contentlayer/source-files';
+import readingTime from 'reading-time';
 
 /** @type {import('contentlayer/source-files').ComputedFields} */
 const computedFields = {
@@ -9,6 +10,10 @@ const computedFields = {
   slugAsParams: {
     type: 'string',
     resolve: (doc) => doc._raw.flattenedPath.split('/').slice(1).join('/'),
+  },
+  readingTime: {
+    type: 'json',
+    resolve: (doc) => Math.ceil(readingTime(doc.body.raw).minutes),
   },
 };
 
@@ -30,8 +35,8 @@ const computedFields = {
 
 export const Post = defineDocumentType(() => ({
   name: 'Post',
-  filePathPattern: `/blog/**/*.md`,
-  contentType: 'md',
+  filePathPattern: `/blog/**/*.mdx`,
+  contentType: 'mdx',
   fields: {
     title: {
       type: 'string',
