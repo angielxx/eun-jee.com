@@ -21,12 +21,12 @@ const Header = () => {
         <HeaderBtn
           href="/blog"
           title="Blog"
-          status={pathname === '/blog' ? 'active' : 'default'}
+          status={pathname.startsWith('/blog') ? 'active' : 'default'}
         />
         <HeaderBtn
           href="/guestbook"
           title="Guestbook"
-          status={pathname === '/guestbook' ? 'active' : 'default'}
+          status={pathname.startsWith('/guestbook') ? 'active' : 'default'}
         />
       </div>
       <div className="flex gap-2">

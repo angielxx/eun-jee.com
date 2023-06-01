@@ -19,17 +19,17 @@ const commonStyle =
 
 const styles: stylesType = {
   default: 'text-text',
-  active: 'text-p500 font-extrabold',
+  active: 'text-p500 font-bold',
   hover: 'hover:bg-grey10',
 };
 
 const HeaderBtn = ({ href, title, status }: HeaderBtnProps) => {
   return (
-    <div className={`${commonStyle} ${styles[status]} ${styles['hover']}`}>
-      <Link href={href}>
+    <Link href={href}>
+      <div className={`${commonStyle} ${styles[status]} ${styles['hover']}`}>
         <p>{title}</p>
-      </Link>
-    </div>
+      </div>
+    </Link>
   );
 };
 
