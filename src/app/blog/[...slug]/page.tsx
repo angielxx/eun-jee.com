@@ -1,8 +1,9 @@
-import Title from '@/components/PostDetail/Title';
-import MdxComponents from '@/components/common/MdxComponents';
+import Title from '@/components/PostPage/Title';
+import MdxComponents from '@/components/PostPage/MdxComponents';
 import { allPosts } from 'contentlayer/generated';
 import Image from 'next/image';
 import { notFound } from 'next/navigation';
+import PostHead from '@/components/PostPage/PostHead';
 
 interface PostDetailProps {
   params: {
@@ -18,9 +19,7 @@ export default function PostPage({ params }: PostDetailProps) {
 
   return (
     <article>
-      <Title title={post.title} />
-      <span>{post.date}</span>
-      <span>{post.readingTime}분</span>
+      <PostHead post={post} />
       <MdxComponents code={post.body.code} />
     </article>
   );

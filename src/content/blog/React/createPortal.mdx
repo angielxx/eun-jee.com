@@ -1,0 +1,93 @@
+---
+title: createPortal를 사용하면서 꼭 알아야 하는 것
+description: createPortal
+date: 2023-03-17
+type: Post
+---
+
+## createPortal이 하는 일
+
+> 부모 컴포넌트의 DOM 계층 구조 바깥에 있는 DOM 노드로 일부 자식 요소들을 렌더링할 수 있게 해준다.
+
+## 문법
+
+```javascript
+createPortal(children, domNode);
+```
+
+1. `children` : portal로 보내 렌더링하고자 하는 요소
+2. `domNode` : `hildren`을 렌더링하고자 하는 위치의 DOM 노드
+
+## 리액트 트리와 DOM 트리에서의 위치
+
+> 렌더링되는 위치는 부모 컴포넌트의 바깥에서 이루어지지만, 리액트의 렌더 트리 상으로는 여전히 기존 부모 컴포넌트의 하위에 위치한다.
+
+포털을 사용하여 렌더되는 자식 컴포넌트는 여전히 리액트의 컴포넌트 트리 상에서 기존 부모 컴포넌트의 하위 컴포넌트이다. **즉, 해당 자식 컴포넌트는 여전히 기존의 부모 컴포넌트의 영향을 받는다는 뜻이다.** 또한 자식 컴포넌트에서 발생한 이벤트는 여전히 부모 컴포넌트로 bubble up 되어 전달된다.
+
+하지만 포털을 사용한 자식 컴포넌트는 물리적으로는 부모 컴포넌트의 DOM 계층 구조의 바깥에 있다.
+
+## CSS 상속
+
+이러한 특성으로 인해 포털로 보낸 자식 요소라도, 부모 컴포넌트의 CSS를 상속받게 된다.
+
+```javascript
+const App = () => (
+  <div className="App">
+    App
+    <Modal>Modal</Modal>
+  </div>
+);
+```
+
+위와 같이 포털을 적용한 Modal을 App 컴포넌트 안에서 사용하고 있을 때, Modal은 App 컴포넌트의 CSS를 상속받는다.
+
+만약 App의 CSS를 상속받지 않고 싶다면 App의 외부에 포탈을 걸어 보내면 된다.
+
+## Portal을 통한 이벤트 버블링
+
+먼저 원래라면 event bubbling은 DOM 트리를 따라 상위의 루트노드까지 전달된다.
+
+하지만 리액트 공식문서를 보면 이렇게 설명하고 있다.
+
+> context와 같은 기능은 자식이 portal이든지 아니든지 상관없이 정확하게 같게 동작합니다. 이는 **DOM 트리에서의 위치에 상관없이 portal은 여전히 React 트리에 존재**하기 때문입니다.
+
+> 포털의 이벤트는 DOM 트리가 아닌 **리액트 트리를 따라 전파**된다.
+
+이 뜻은, 포털로 자식 요소를 보냈다고 하더라도, portal 내부에서 발생한 이벤트는 리액트 트리에 포함된 상위로 전파된다는 뜻이다. DOM 트리의 구조와는 상관없이 말이다.
+
+예를 들어,
+
+```javascript
+const Modal = ({ children }) => (
+  <div className="Modal">
+    {children}
+    {/* 이 버튼을 클릭하면 이벤트가 부모로 버블링될 것이다. */}
+    <button>Button</button>
+  </div>
+)
+
+const ProtalModal = () => React.DOM.createPortal(Modal, ...)
+
+const App = () => {
+  const handleClick = e => {
+    // button에서 발생한 이벤트가 여기서 잡힐 것이다.
+    console.log(e.target) // <button>
+  }
+  return (
+    <div className="App" onClick={handleClick}>
+      App
+      <PortalModal>Modal</PortalModal>
+    </div>
+  )
+}
+```
+
+여기서 Modal에서 발생한 button의 클릭 이벤트를 App에서 감지하여 handleClick으로 처리할 수 있는 것이다.
+
+## 결론
+
+포털을 사용한다는 의미는 렌더링되는 위치만 DOM 트리에 반영되는 것이고, 리액트 트리는 원래 위치를 유지한다.
+
+#### 참고
+
+- [리액트 Portal (김정환님 블로그)](https://jeonghwan-kim.github.io/2022/06/02/react-portal)
