@@ -11,7 +11,7 @@ const PostItem = ({ post }: PostItemProps) => {
   return (
     <Link href={post.slug}>
       <div className="p-4 rounded-xl bg-gradient-to-r hover:from-[#D5FED8] hover:to-[#F1FFCB] hover:dark:from-[#2B342E] hover:dark:to-[#31342B]">
-        <p className="text-lg">{post.title}</p>
+        <p className="text-lg font-bold">{post.title}</p>
         {post.description && <p className="text-sm">{post.description}</p>}
         <div className="flex text-subtext gap-3 text-sm mt-1">
           <div className="flex gap-2 items-center relative">
