@@ -1,9 +1,9 @@
 import Title from '@/components/PostPage/Title';
 import MdxComponents from '@/components/PostPage/MdxComponents';
 import { allPosts } from 'contentlayer/generated';
-import Image from 'next/image';
 import { notFound } from 'next/navigation';
 import PostHead from '@/components/PostPage/PostHead';
+import Toc from '@/components/PostPage/Toc';
 
 interface PostDetailProps {
   params: {
@@ -18,8 +18,11 @@ export default function PostPage({ params }: PostDetailProps) {
   if (!post) notFound();
 
   return (
-    <article>
+    <article className="relative">
       <PostHead post={post} />
+      <div className="absolute left-[100%]">
+        <Toc post={post} />
+      </div>
       <MdxComponents code={post.body.code} />
     </article>
   );
