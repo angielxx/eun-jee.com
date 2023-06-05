@@ -22,9 +22,9 @@ export default function Home() {
           <LinkTag href="" text="portfolio" />
         </div>
       </ContentWrapper>
-      <div>
+      <div className="flex flex-col gap-2">
         <p>
-          최근 게시물 <span>{allPosts.length}</span>
+          최근 게시물 <span className="text-grey50">{allPosts.length}</span>
         </p>
         {allPosts.map((post, idx) => (
           <PostItem post={post} key={idx} />
