@@ -1,6 +1,5 @@
 import React from 'react';
 import Image from 'next/image';
-import sample from '../common/Sample';
 import { useMDXComponent } from 'next-contentlayer/hooks';
 
 interface Props {
