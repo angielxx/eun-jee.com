@@ -4,6 +4,7 @@ import { Inter } from 'next/font/google';
 import localFont from 'next/font/local';
 import Header from '@/components/common/Header/Header';
 import { ThemeProvider } from '@/components/ThemeProvider';
+import Footer from '@/components/common/Footer/Footer';
 
 const pretendard = localFont({
   src: [
@@ -72,6 +73,7 @@ export default function RootLayout({ children }: RootLayoutProps) {
         <body className="flex flex-col justify-center items-center font-light leading-7">
           <Header />
           <main className="w-1/2">{children}</main>
+          <Footer />
         </body>
       </ThemeProvider>
     </html>
