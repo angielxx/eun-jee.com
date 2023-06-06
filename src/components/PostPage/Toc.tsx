@@ -17,7 +17,7 @@ const Toc = ({ post }: TocProps) => {
             <div key={`#${heading.slug}`}>
               <a
                 data-level={heading.level}
-                href={heading.slug}
+                href={`#${heading.slug}`}
                 className={classByLevel}
               >
                 {heading.text}
