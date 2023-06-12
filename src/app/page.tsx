@@ -18,8 +18,8 @@ export default function Home() {
           <p>저에 대해 더 알고 싶다면 아래 링크를 참고해주세요.</p>
         </div>
         <div className="flex gap-4">
-          <LinkTag href="" text="resume" />
-          <LinkTag href="" text="portfolio" />
+          {/* <LinkTag href="" text="resume" /> */}
+          <LinkTag href="https://angielee.oopy.io/" text="portfolio" />
         </div>
       </ContentWrapper>
       <div className="flex flex-col gap-2">
