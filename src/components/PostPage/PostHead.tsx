@@ -1,4 +1,4 @@
-import useDateFormat from '@/hooks/useDateFormat';
+import { useDateFormat } from '@/hooks/useDateFormat';
 import { Post } from 'contentlayer/generated';
 import React from 'react';
 
@@ -9,9 +9,9 @@ interface PostHeadProps {
 const PostHead = ({ post }: PostHeadProps) => {
   return (
     <div className="flex flex-col justify-center items-center text-center border-b-[1px] pb-6 border-grey10">
-      <h1 className="text-5xl font-bold h-fit leading-snug break-keep">
+      <p className="text-5xl font-bold h-fit leading-snug break-keep">
         {post.title}
-      </h1>
+      </p>
       <div className="flex text-subtext gap-3">
         <div className="flex gap-2 items-center relative">
           <svg
