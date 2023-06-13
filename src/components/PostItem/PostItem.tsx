@@ -1,4 +1,4 @@
-import useDateFormat from '@/hooks/useDateFormat';
+import { useDateFormat } from '@/hooks/useDateFormat';
 import { Post } from 'contentlayer/generated';
 import Link from 'next/link';
 import React from 'react';

@@ -46,7 +46,7 @@ const Heading = ({ children, id, tag }: HeadingProps) => {
   const elements: ElementsType = {
     1: (
       <h1
-        className={commonStyle}
+        className={`${commonStyle} mt-12`}
         onMouseEnter={() => setIsHover(true)}
         onMouseLeave={() => setIsHover(false)}
       >
