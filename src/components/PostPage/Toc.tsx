@@ -16,8 +16,10 @@ interface paddingType {
 const Toc = ({ post }: TocProps) => {
   const [activeId, setActiveId] = useState<string>('');
   const [isFixed, setIsFixed] = useState<boolean>(false);
+  const [headings, setHeadings] = useState<string[]>([]);
+  // const [scrollDir, setScrollDir] = useState<string>('');
 
-  useFindActiveHeading(setActiveId);
+  // useFindActiveHeading(setActiveId);
 
   useEffect(() => {
     const tocPin = document.querySelector('#toc-pin');
@@ -27,10 +29,49 @@ const Toc = ({ post }: TocProps) => {
 
     function onScroll() {
       const scrollPosition = scrollY + 112;
-      console.log(scrollPosition, pinPos);
       if (scrollPosition >= pinPos) setIsFixed(true);
       else setIsFixed(false);
     }
+  }, []);
+
+  useEffect(() => {
+    let scrollDir: string;
+    let prevScrollPos = window.scrollY || document.documentElement.scrollTop;
+    window.addEventListener('scroll', () => {
+      const currentScrollPos =
+        window.scrollY || document.documentElement.scrollTop;
+      if (currentScrollPos > prevScrollPos) {
+        scrollDir = 'down';
+      } else if (currentScrollPos < prevScrollPos) {
+        scrollDir = 'up';
+      }
+      prevScrollPos = currentScrollPos;
+    });
+
+    const handler = (entries) => {
+      entries.forEach((entry) => {
+        if (scrollDir === 'down' && entry.isIntersecting) {
+          setActiveId(entry.target.parentNode.id);
+        }
+        if (scrollDir === 'up' && !entry.isIntersecting) {
+          const currentIdx = post.headings.findIndex(
+            (heading) => heading.slug === entry.target.parentNode.id
+          );
+          if (currentIdx !== 0) setActiveId(post.headings[currentIdx - 1].slug);
+        }
+      });
+    };
+
+    const option = {
+      threshold: 1,
+      rootMargin: `0px 0px -${window.innerHeight - 47}px 0px`,
+    };
+
+    const observer = new IntersectionObserver(handler, option);
+    const elements = document.querySelectorAll('h1, h2, h3, h4, h5, h6');
+    elements.forEach((el) => observer.observe(el));
+
+    return () => observer.disconnect();
   }, []);
 
   const basicStyle = 'text-subtext hover:text-p400 text-sm leading-2';
@@ -54,8 +95,6 @@ const Toc = ({ post }: TocProps) => {
           const highlightStyle = `${
             activeId === heading.slug ? 'font-bold text-p400' : ''
           }`;
-          // console.log('here', heading.slug);
-          // console.log('here2', activeId === heading.slug);
           return (
             <li key={`#${heading.slug}`} className={classByLevel}>
               <a
