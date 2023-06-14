@@ -8,7 +8,7 @@ export function useFindActiveHeading(setActiveId) {
   useEffect(() => {
     const observerHandler = (entries) => {
       entries.forEach((entry) => {
-        console.log('entry', entry);
+        // console.log('entry', entry);
         if (entry?.isIntersecting) {
           setActiveId(entry.target.parentNode.id);
         }

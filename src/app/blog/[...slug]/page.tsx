@@ -14,13 +14,15 @@ interface PostDetailProps {
 export default function PostPage({ params }: PostDetailProps) {
   const slug = params.slug.join('/');
   const post = allPosts.find((post) => post.slugAsParams === slug);
+  console.log('params :', params);
+  console.log(post?.slug, post?.slugAsParams);
 
   if (!post) notFound();
 
   return (
     <article className="relative">
       <PostHead post={post} />
-      <div className="absolute left-[100%]">
+      <div className="absolute left-[100%]" id="toc-pin">
         <Toc post={post} />
       </div>
       <MdxComponents code={post.body.code} />
