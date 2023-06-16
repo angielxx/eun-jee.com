@@ -3,7 +3,7 @@ import './globals.css';
 import { Inter } from 'next/font/google';
 import localFont from 'next/font/local';
 import Header from '@/components/common/Header/Header';
-import { ThemeProvider } from '@/components/ThemeProvider';
+import { ThemeProvider } from '@/components/common/ThemeProvider';
 import Footer from '@/components/common/Footer/Footer';
 
 const pretendard = localFont({
