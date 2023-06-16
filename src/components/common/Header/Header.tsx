@@ -19,9 +19,9 @@ const Header = () => {
           status={pathname === '/' ? 'active' : 'default'}
         />
         <HeaderBtn
-          href="/blog"
+          href="/category"
           title="Blog"
-          status={pathname.startsWith('/blog') ? 'active' : 'default'}
+          status={pathname.startsWith('/category') ? 'active' : 'default'}
         />
         <HeaderBtn
           href="/guestbook"
