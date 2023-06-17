@@ -67,9 +67,10 @@ const Toc = ({ post }: TocProps) => {
     };
 
     const option = {
-      threshold: 1,
-      rootMargin: `0px 0px -${window.innerHeight - 47}px 0px`,
+      threshold: 0.1,
+      rootMargin: `0px 0px -${window.innerHeight - 48}px 0px`,
     };
+    console.log('option :', option);
 
     const observer = new IntersectionObserver(handler, option);
     const elements = document.querySelectorAll('h1, h2, h3, h4, h5, h6');
@@ -82,7 +83,10 @@ const Toc = ({ post }: TocProps) => {
   const fixedStyle = isFixed ? 'fixed top-[112px]' : '';
 
   return (
-    <div id="toc" className={`${fixedStyle} w-[240px] py-4 px-8 top-1`}>
+    <div
+      id="toc"
+      className={`${fixedStyle} xl:block hidden w-[240px] py-4 px-8 top-1`}
+    >
       <p className="text-sm font-bold mb-1 text-text">On this page</p>
       <div>
         {post.headings.map((heading: any) => {
@@ -105,6 +109,7 @@ const Toc = ({ post }: TocProps) => {
                 data-level={heading.level}
                 href={`#${heading.slug}`}
                 className={highlightStyle}
+                onClick={() => setActiveId(heading.slug)}
               >
                 {heading.text}
               </a>
