@@ -72,7 +72,7 @@ export default function RootLayout({ children }: RootLayoutProps) {
       <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
         <body className="flex flex-col justify-center items-center font-light leading-7 w-full">
           <Header />
-          <main className="xl:w-[50%] md:w-[65%] w-[90%] mb-[256px]">
+          <main className="xl:max-w-[768px] xl:w-[768px] md:max-w-[512px] md:w-[512px] w-[90%] max-w-[512px] mb-[256px]">
             {children}
           </main>
           <Footer />
