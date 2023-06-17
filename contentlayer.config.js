@@ -2,6 +2,7 @@ import { defineDocumentType, makeSource } from 'contentlayer/source-files';
 import readingTime from 'reading-time';
 import rehypeSlug from 'rehype-slug';
 import GithubSlugger from 'github-slugger';
+import rehypePrettyCode from 'rehype-pretty-code';
 
 /** @type {import('contentlayer/source-files').ComputedFields} */
 const computedFields = {
@@ -72,10 +73,12 @@ export const Post = defineDocumentType(() => ({
   computedFields,
 }));
 
+const prettyCodeOption = {};
+
 export default makeSource({
   contentDirPath: './src/content',
   documentTypes: [Post],
   mdx: {
-    rehypePlugins: [rehypeSlug],
+    rehypePlugins: [rehypeSlug, [rehypePrettyCode, prettyCodeOption]],
   },
 });
