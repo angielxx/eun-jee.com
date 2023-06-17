@@ -16,22 +16,34 @@ interface paddingType {
 const Toc = ({ post }: TocProps) => {
   const [activeId, setActiveId] = useState<string>('');
   const [isFixed, setIsFixed] = useState<boolean>(false);
-  const [headings, setHeadings] = useState<string[]>([]);
-  // const [scrollDir, setScrollDir] = useState<string>('');
-
-  // useFindActiveHeading(setActiveId);
+  const [isHover, setIsHover] = useState<boolean>(false);
+  const [showButton, setShowButton] = useState(false);
 
   useEffect(() => {
     const tocPin = document.querySelector('#toc-pin');
     const pinPos = tocPin?.getBoundingClientRect().top;
 
     document.addEventListener('scroll', onScroll, { passive: true });
+    document.addEventListener('scroll', handleShowButton);
 
     function onScroll() {
       const scrollPosition = scrollY + 112;
       if (scrollPosition >= pinPos) setIsFixed(true);
       else setIsFixed(false);
     }
+
+    function handleShowButton() {
+      if (window.scrollY > 500) {
+        setShowButton(true);
+      } else {
+        setShowButton(false);
+      }
+    }
+
+    return () => {
+      window.removeEventListener('scroll', onScroll);
+      window.removeEventListener('scroll', handleShowButton);
+    };
   }, []);
 
   useEffect(() => {
@@ -82,13 +94,20 @@ const Toc = ({ post }: TocProps) => {
   const basicStyle = 'text-grey70 hover:text-p400 text-sm leading-none';
   const fixedStyle = isFixed ? 'fixed top-[112px]' : '';
 
+  const scrollTopHandler = () => {
+    window.scrollTo({
+      top: 0,
+      behavior: 'smooth',
+    });
+  };
+
   return (
     <div
       id="toc"
-      className={`${fixedStyle} xl:block hidden w-[240px] py-4 px-8 top-1`}
+      className={`${fixedStyle} lg:flex md:hidden hidden w-[240px] mt-4 ml-12 top-1 flex-col gap-4 divide-y divide-grey10`}
     >
-      <p className="text-sm font-bold mb-1 text-text">On this page</p>
       <div>
+        <p className="text-sm font-bold mb-1 text-text">On this page</p>
         {post.headings.map((heading: any) => {
           if (heading.level in ['Four', 'Five', 'Six']) return;
           const level: levelType = heading.level;
@@ -117,6 +136,26 @@ const Toc = ({ post }: TocProps) => {
           );
         })}
       </div>
+      {showButton && (
+        <div className="flex items-center gap-1 pt-4">
+          <p
+            className="text-sm text-grey70 hover:text-p400 cursor-pointer"
+            onMouseEnter={() => setIsHover(true)}
+            onMouseLeave={() => setIsHover(false)}
+            onClick={scrollTopHandler}
+          >
+            Scroll to top
+          </p>
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            height="1em"
+            viewBox="0 0 384 512"
+            className={`${isHover ? 'fill-p400' : 'fill-grey70'}`}
+          >
+            <path d="M214.6 41.4c-12.5-12.5-32.8-12.5-45.3 0l-160 160c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0L160 141.2V448c0 17.7 14.3 32 32 32s32-14.3 32-32V141.2L329.4 246.6c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3l-160-160z" />
+          </svg>
+        </div>
+      )}
     </div>
   );
 };
