@@ -11,7 +11,7 @@ const Header = () => {
   const pathname = usePathname();
 
   return (
-    <header className="max-w-[1078px] w-3/4 flex justify-between my-8">
+    <header className="xl:w-[75%] md:w-[85%] w-[90%] flex justify-between my-8">
       <div className="flex gap-2">
         <HeaderBtn
           href="/"
@@ -23,11 +23,11 @@ const Header = () => {
           title="Blog"
           status={pathname.startsWith('/category') ? 'active' : 'default'}
         />
-        <HeaderBtn
+        {/* <HeaderBtn
           href="/guestbook"
           title="Guestbook"
           status={pathname.startsWith('/guestbook') ? 'active' : 'default'}
-        />
+        /> */}
       </div>
       <div className="flex gap-2">
         <SearchBar />

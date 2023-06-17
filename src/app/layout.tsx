@@ -70,9 +70,11 @@ export default function RootLayout({ children }: RootLayoutProps) {
   return (
     <html lang="en" className={`${pretendard.variable} font-sans`}>
       <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
-        <body className="flex flex-col justify-center items-center font-light leading-7">
+        <body className="flex flex-col justify-center items-center font-light leading-7 w-full">
           <Header />
-          <main className="w-1/2 mb-[256px]">{children}</main>
+          <main className="xl:w-[50%] md:w-[65%] w-[90%] mb-[256px]">
+            {children}
+          </main>
           <Footer />
         </body>
       </ThemeProvider>
