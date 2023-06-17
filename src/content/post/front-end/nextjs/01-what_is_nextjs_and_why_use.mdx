@@ -1,0 +1,154 @@
+---
+title: Next.js가 무엇이고 왜 뜨는걸까? (13 ver)
+description: Next.js의 등장한 이유를 통해 Next.js가 사용되는 이유를 알아보자.
+date: 2023-06-14
+type: Post
+---
+
+# Next.js란
+
+웹 어플리케이션 제작을 위한 ‘리액트 프레임워크’이다.
+
+> Next.js is a flexible React framework that gives you building blocks to create fast web applications.
+
+Next.js의 공식 문서를 보면 “The React Framework”라고 소개하고 있다.
+‘프레임워크’라는 말인 즉슨, Next.js는 리액트를 ‘잘’ 사용하기 위해 필요한 구조나 기능을 제공하는 도구라는 말이다.
+
+> 리액트를 ‘잘’ 사용하기 위함이란 무엇을 말하는걸까?
+
+이를 알아보기 위해 Next.js가 왜 등장했는지 살펴보자.
+
+# Next.js 등장배경
+
+그동안 프론트엔드 시장에서 React가 가장 지배적으로 사용되어 왔다. 그 이유는 SPA(Single Page Application)을 구축하는 도구이며, CSR을 사용하는 SPA를 통해 끊김없는 화면 전환 등으로 사용자 경험을 향상시킬 수 있기 때문이었다.
+
+하지만, React가 기본적으로 CSR 방식을 사용하기 때문에 생기는 단점들이 있었다. (CSR의 단점)
+
+> 리액트의 단점
+
+1. 초기 로딩 속도가 느림
+2. 검색 엔진 최적화 측면에서 불리
+   >
+
+이러한 CSR의 단점을 보완하며 React를 사용하기 위해 Next.js가 등장했다.
+
+Next.js가 보완하고 있는 CSR의 단점이 무엇일까?
+
+## CSR의 단점
+
+### 초기 로딩 속도
+
+CSR의 장점은 CSR에서 사용자가 웹 페이지와 매끄럽게 상호작용 할 수 있다는 점이었다.
+
+> CSR에서 이러한 특징이 가능한 이유는?
+
+그 정답은 바로 사용자가 어플리케이션에 최초로 접속하게 되면 해당 어플리케이션을 구동하기 위한 모든 자바스크립트 파일을 불러오기 때문이다. 이를 통해 사용자가 어플리케이션 내의 다른 페이지로 이동하게 되면 새로운 페이지에 대해 오래 기다릴 필요가 없어서 웹 페이지와 바로바로 상호작용할 수 있는 것이다.
+
+이러한 CSR의 특징으로 CSR은 초기 로딩 속도가 느리다는 단점이 있다. (CSR의 장점이자 단점인 셈)
+
+이를 보완하게 위해 CSR에서 코드 스플리팅을 사용하기도 한다. (Next.js에서는 기본적으로 지원됨)
+
+### 검색 엔진 최적화
+
+CSR 방식이 검색 엔진 최적화 측면에서 불리하다는 점을 알려면 먼저 검색 엔진이 어떻게 동작하는지 간단하게 알아볼 필요가 있다.
+
+우리가 알고 있는 주요 검색 사이트인 Google, Yahoo, Naver와 같은 웹 사이트는 자체적으로 검색 엔진 크롤러(웹 크롤러)를 가지고 있다. 이 웹 크롤러는 자동화된 프로그램으로, 인터넷 상의 수십억개의 웹 페이지들을 돌아다니며 웹 페이지의 콘텐츠를 수집해 각 페이지가 어떤 정보를 담고 있는지 표시(인덱싱)한다.
+
+웹 크롤러는 웹 페이지의 구조와 내용을 이해하기 위해 초기 HTML의 내용을 분석한다. CSR에서 초기 페이지 로드 후 자바스크립트를 사용하여 콘텐츠를 렌더링하는데, 웹 크롤러는 일반 웹 브라우저만큼 자바스크립트를 광범위하게 실행하지 않으며, 렌더링이 완료될 때까지 기다리지 않기도 한다.
+
+이러한 이유로 초기 HTML이 비어있거나 중요하지 않은 내용을 포함하고 있는 CSR에서 검색 엔진 최적화가 어려운 것이다.
+
+Google의 검색 작동 방식 관련하여 자세히 알고 싶다면 아래의 Google 검색 센터 블로그를 참고하세요.
+
+[https://developers.google.com/search/docs/fundamentals/how-search-works?hl=ko](https://developers.google.com/search/docs/fundamentals/how-search-works?hl=ko)
+
+## 리액트를 ‘잘’ 사용하는 것이란
+
+> 결론적으로 Next.js라는 리액트 프레임워크를 통해 리액트를 ‘잘’ 사용하는 것이란,
+> Next.js의 기능을 통해 CSR의 단점을 보완하며 리액트를 사용하는 것이라고 볼 수 있다.
+
+# Next.js에서 이를 어떻게 보완하고 있나?
+
+CSR의 단점 두 가지를 Pre-rendering과 Code Splitting이라는 Next.js의 핵심 기능으로 보완하고 있다.
+
+### Pre-rendering
+
+Next.js에서는 모든 페이지가 기본적으로 pre-render된다. 즉, Next.js는 미리 각 페이지의 HTML 파일을 서버에서 생성한다.
+
+Next.js의 Pre-rendering은 두 가지 방법으로 이루어진다.
+
+1. Server-side Rendering (SSR)
+2. Static Generation (SSG)
+
+위에서 검색 엔진 크롤러가 웹 페이지를 탐색하고 컨텐츠를 분석하기 위해선 HTML 파일이 필요하다고 했다. Next.js를 사용하면 Pre-render된 HTML 파일을 제공하므로써 검색 엔진 크롤러가 우리가 만든 웹 페이지를 잘 분석할 수 있게 도와줄 수 있다.
+
+### Code Splitting
+
+![Untitled](https://media.crystallize.com/crystallize_marketing/images/@3200/485_crystallize_strip_25_blogpost.png)
+
+먼저 Code Splitting이란, 웹 어플리케이션의 자바스크립트 코드를 작은 조각으로 분할하여 필요시에 로딩하는 것이다. 위의 사진을 보면 Code Splitting이 뭔지 단번에 이해할 수 있을 것이다.
+
+위에서 언급했듯이, 초기 로딩 속도가 느린 CSR의 단점은 처음에 필요한 모든 자바스크립트를 불러오기 때문에 발생한다고 했다. 이를 Code Splitting을 통해 CSR의 단점을 보완할 수 있는데, 이러한 기능을 Next.js는 기본적으로 알아서 수행해준다.
+
+Next.js는 디폴트로 서버 컴포넌트들에 대해 Code Splitting을 수행하고, streaming을 통해 점차적으로 서버에서 클라이언트로 UI 조각들을 보낼 수 있다.
+
+클라이언트 컴포넌트에서는 dynamic import를 통해 Lazy Loading을 구현하여 Code Splitting을 적용할 수 있다.
+
+참고 : Dynamic import는 아래 예시 코드처럼 특정 컴포넌트의 파일이 필요할 때 동적으로 임포트하여 사용하는 것이다.
+
+```jsx
+import dynamic from 'next/dynamic';
+
+// Server Component:
+const ServerComponent = dynamic(() => import('../components/ServerComponent'));
+
+export default function ServerComponentExample() {
+  return (
+    <div>
+      <ServerComponent />
+    </div>
+  );
+}
+```
+
+이렇게 Code Splitting을 지원하므로써 필요한 페이지에 대한 파일만 로딩하므로써 초기 로딩 속도를 줄일 수 있다.
+
+# React = CSR, Next.js = SSR?
+
+그렇다면 React는 Client-side Rendering이고, Next.js는 Server-side Rendering일까?
+
+> 정답은 아니다!
+
+React에서 주로 사용되는 렌더링 방식이 CSR이며, Next.js는 React를 기반으로 SSR을 ‘지원’하는 프레임워크이다.
+
+React에서도 SSR구현이 가능하고, Next.js에서는 CSR과 SSR을 모두 사용할 수 있다.
+
+### React에서의 SSR
+
+React에서 SSR을 구현하는 방법은 Node.js를 사용하여 서버 사이드 렌더링을 수행할 프론트엔드 서버를 구축하는 것이다. 이 과정은 꽤나 복잡하기 때문에 SSR과 Code Splitting을 기본적으로 지원하는 Next.js는 가히 혁명적이다!!!
+
+### Next.js에서의 CSR
+
+Next.js는 기본적으로 서버 사이드 렌더링을 사용하지만, 일부 페이지나 컴포넌트에 대해 클라이언트 사이드 렌더링을 사용할 수도 있다. Next.js에서는 컴포넌트가 크게 두 가지로 ‘서버 컴포넌트’와 ‘클라이언트 컴포넌트’로 구분된다. 클라이언트 컴포넌트는 클라이언트 측에서 렌더링할 컴포넌트로, 파일 상단에 ‘use client;’라는 구문을 명시하여 Next.js에게 알려줄 수 있다.
+
+```jsx
+'use client';
+
+import { useState } from 'react';
+
+export default function Counter() {
+  const [count, setCount] = useState(0);
+
+  return (
+    <div>
+      <p>You clicked {count} times</p>
+      <button onClick={() => setCount(count + 1)}>Click me</button>
+    </div>
+  );
+}
+```
+
+# 참고
+
+[Next.js 13 공식문서](https://nextjs.org/) <br/>
+[Google 검색 센터 블로그](https://developers.google.com/search/docs/fundamentals/how-search-works?hl=ko)
