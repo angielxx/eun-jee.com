@@ -10,7 +10,7 @@ interface TocProps {
 
 type levelType = 'One' | 'Two' | 'Three' | 'Four' | 'Five' | 'Six';
 interface paddingType {
-  [key: string]: number;
+  [key: string]: string;
 }
 
 const Toc = ({ post }: TocProps) => {
@@ -52,12 +52,16 @@ const Toc = ({ post }: TocProps) => {
       entries.forEach((entry) => {
         if (scrollDir === 'down' && entry.isIntersecting) {
           setActiveId(entry.target.parentNode.id);
+          console.log(entry.target.parentNode.id);
         }
         if (scrollDir === 'up' && !entry.isIntersecting) {
           const currentIdx = post.headings.findIndex(
             (heading) => heading.slug === entry.target.parentNode.id
           );
-          if (currentIdx !== 0) setActiveId(post.headings[currentIdx - 1].slug);
+          if (currentIdx !== 0) {
+            setActiveId(post.headings[currentIdx - 1].slug);
+            console.log(post.headings[currentIdx - 1].slug);
+          }
         }
       });
     };
@@ -74,40 +78,40 @@ const Toc = ({ post }: TocProps) => {
     return () => observer.disconnect();
   }, []);
 
-  const basicStyle = 'text-subtext hover:text-p400 text-sm leading-2';
+  const basicStyle = 'text-grey70 hover:text-p400 text-sm leading-none';
   const fixedStyle = isFixed ? 'fixed top-[112px]' : '';
 
   return (
-    <div id="toc" className={`${fixedStyle} w-[224px] py-4 px-8 top-1`}>
-      <p className="text-sm font-bold mb-1">On this page</p>
-      <ul>
+    <div id="toc" className={`${fixedStyle} w-[240px] py-4 px-8 top-1`}>
+      <p className="text-sm font-bold mb-1 text-text">On this page</p>
+      <div>
         {post.headings.map((heading: any) => {
+          if (heading.level in ['Four', 'Five', 'Six']) return;
           const level: levelType = heading.level;
           const padding: paddingType = {
-            One: 1,
-            Two: 2,
-            Three: 3,
-            Four: 4,
-            Five: 5,
-            Six: 6,
+            One: '',
+            Two: 'pl-3',
+            Three: 'pl-6',
+            Four: 'pl-6',
+            Five: 'pl-5',
+            Six: 'pl-6',
           };
-          let classByLevel = `pl-${padding[level]}`;
           const highlightStyle = `${
-            activeId === heading.slug ? 'font-bold text-p400' : ''
-          }`;
+            activeId === heading.slug ? 'text-p400 scale-[1.1]' : 'text-grey70'
+          } hover:text-p400 text-sm leading-none transition-transform ease-in-out scale-0`;
           return (
-            <li key={`#${heading.slug}`} className={classByLevel}>
+            <div key={`#${heading.slug}`} className={padding[level]}>
               <a
                 data-level={heading.level}
                 href={`#${heading.slug}`}
-                className={`${basicStyle} ${highlightStyle}`}
+                className={highlightStyle}
               >
                 {heading.text}
               </a>
-            </li>
+            </div>
           );
         })}
-      </ul>
+      </div>
     </div>
   );
 };
