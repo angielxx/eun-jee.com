@@ -1,0 +1,119 @@
+---
+title: Next.js에서 꼭 알아야하는 Pre-rendering
+description: CSR과 비교하며 Pre-rendering이 왜 필요하며 중요한지 알아보자
+date: 2023-06-19
+type: Post
+---
+
+# Next.js에서 꼭 알아야하는 Pre-rendering
+
+Created time: June 14, 2023 3:05 PM
+Date: 2023/06/19
+카테고리: front-end/Next.js
+
+# Pre-rendering이란?
+
+> By default, Next.js pre-renders every page. This means that Next.js *generates HTML for each page in advance*, instead of having it all done by client-side JavaScript. Pre-rendering can result in better performance and [SEO](https://en.wikipedia.org/wiki/Search_engine_optimization).
+
+Pre-rendering이란, 서버에서 각 페이지의 HTML 파일을 미리 생성하는 것이다.Next.js에서는 디폴트로 모든 페이지가 pre-render된다.
+
+## Pre-rendering이 필요한 이유
+
+지난 포스팅에서 설명했듯이, Pre-rendering은 리액트의 Client-Side Rendering의 단점을 보완하기 위한 Next.js의 핵심 기능 중 하나이다. (이에 대한 자세한 내용은 이 글을 참고해주세요)
+
+그렇다면 Pre-rendering이 필요한 이유에 대해 Client-Side Rendering과 비교하며 알아보자.
+
+### Client-Side Rendering
+
+리액트로 만들어진 어플리케이션은 서버로부터 빈 HTML과 UI를 구성하기 위한 자바스크립트를 전달받아 화면을 렌더링한다. 초기 렌더링이 사용자의 디바이스에서 이루어지기 때문에 ‘Client-Side Rendering’이라고 부른다.
+
+따라서 자바스크립트의 사용을 차단하면 화면을 렌더링할 수 없다.
+
+![https://nextjs.org/static/images/learn/foundations/client-side-rendering.png](https://nextjs.org/static/images/learn/foundations/client-side-rendering.png)
+
+Next.js의 공식문서에서 제공하고 있는 자료이다. (사진의 왼쪽부터 오른쪽으로 렌더링이 진행된다.)
+위 그림에서 보면 알 수 있듯이 초기 HTML은 비어있는 상태이다. 여기서 클라이언트 측에서 서버로부터 전달받은 자바스크립트 파일을 사용하여 렌더링을 완료하면 사용자가 원하는 화면을 볼 수 있다. 즉, 모든 렌더링 작업이 완료되기 전까지 사용자는 그 어떤 화면도 볼 수 없다.
+
+### Pre-Rendering
+
+이에 반해 Next.js는 특정 페이지의 컴포넌트를 Pre-render하여 미리 서버에서 생성한 HTML을 전달하여 사용자에게 화면을 보여준다. Client-Side Rendering과 다르게 사용자는 초기에 원하는 화면을 볼 수 있다.
+
+![https://nextjs.org/static/images/learn/foundations/pre-rendering.png](https://nextjs.org/static/images/learn/foundations/pre-rendering.png)
+
+위의 Client-Side Rendering을 표현한 그림과 다르게, 가장 먼저 Server-Side Rendering이 이루어진 후, 초기 HTML을 화면에 렌러링하고 Hydration을 통해 동적인 UI로 바뀐다.
+
+여기서 Hydration은 HTML에 자바스크립트를 주입하여 화면을 동적으로 바꾸는 과정이다.
+
+# Pre-rendering의 종류
+
+Next.js에서는 ‘Server-Side Rendering’, ‘Static Site Generation’, ‘Client-Side Rendering’의 세 가지 렌더링 방식을 사용할 수 있다. 이 중에서도 ‘Server-Side Rendering’과 ‘Static Site Generation’은 Pre-rendering의 방식이기도 하다.
+
+SSR과 SSG의 차이점은 ‘HTML 파일을 생성하는 시점’이다.
+
+- Static Generation : 빌드 타임시 생성, pre-render된 HTML은 각 요청마다 재사용
+- Server-side Rendering : 각 요청마다 HTML 생성
+
+각각에 대해 더 자세히 살펴보자.
+
+## Server-Side Rendering
+
+![https://miro.medium.com/v2/resize:fit:1400/format:webp/1*AUfuD-djq42vjmdHL-aiIQ.png](https://miro.medium.com/v2/resize:fit:1400/format:webp/1*AUfuD-djq42vjmdHL-aiIQ.png)
+
+서버 사이드 렌더링에서의 특징은, 사용자가 어떤 페이지에 대해 요청을 보낼 때마다 서버에서 해당 페이지를 Pre-rendering하여 HTML 파일을 생성한다는 것이다. 그런 다음, 해당 페이지를 interactive하게 바꾸기 위해 HTML, JSON 데이터, JavaScript 파일이 클라이언트로 전송된다.
+
+최초에 pre-render된 HTML은 리액트가 JSON 데이터나 JavaScript를 사용해 화면을 동적으로 바꾸는 동안 빠르게 페이지를 보여주기 위해 사용된다. 이러한 과정을 Hydration이라고 부른다.
+
+> `getServerSideProps` 를 사용하여 특정 페이지를 서버 사이드 렌더링하기로 선택할 수 있다.
+
+## Static Site Generation
+
+![https://miro.medium.com/v2/resize:fit:1400/format:webp/1*M_Jl9KRiteVcpJbGtEmZRw.png](https://miro.medium.com/v2/resize:fit:1400/format:webp/1*M_Jl9KRiteVcpJbGtEmZRw.png)
+
+Static Site Generation을 사용하면 HTML이 서버에서 생성되지만 런타임시 서버가 개입하지 않는다. 대신에 어플리케이션이 배포될 때 빌드 타임에서 정적으로 페이지가 생성되고, 이때 미리 정적으로 생성된 HTML 파일이 CDN에 저장되어 같은 요청에서 재사용된다.
+
+> `getStaticProps` 를 사용해 특정 페이지를 정적으로 생성하기로 선택할 수 있다.
+
+한 가지 알아둘 점은, SSG도 develop 모드에서는(npm run dev로 개발하는 단계) 개발의 편리성을 위해 SSG도 SSR 방식으로 동작한다. (클라이언트 요청시에 생성)
+
+# SSR, SSG 각각 언제 사용하면 좋을까?
+
+공식 문서에서는 웬만하면 SSG를 사용하는 것을 추천하고 있다. 왜냐하면 HTML의 생성이 빌드시에 한 번만 생성되고 CDN을 통해 제공되기 때문에 SSR보다 빠르기 때문이라고 한다.
+
+하지만, 어떤 페이지를 사용자의 요청 전에 미리 렌더링할 수 없는 상황이라면 SSR을 사용해야한다. 이러한 경우는 페이지의 데이터가 자주 업데이트되거나, 사용자의 요청마다 바뀌는 경우가 있다.
+
+이러한 경우 SSR을 사용하면 SSG보다는 느리지만 페이지의 데이터를 항상 최신화할 수 있다는 장점이 있다.
+
+# 13 버전에서 달라지는 점
+
+> `getServerSideProps` 와 `getStaticProps`는 next.js 13 버전에서는 존재하지 않는다.
+
+위에서 설명한 모든 Pre-rendering에 대한 설명은 Next.js의 근간이 되는 내용이지만, pre-rendering을 선택하는 방식이었던 `getServerSideProps` 와 `getStaticProps` 가 13버전에서는 더 이상 존재하지 않는다.
+
+대신 fetch API를 사용할 때 옵션을 다르게 적용하므로써 적용할 수 있다.
+
+### SSG
+
+```jsx
+// 직접 무효화 하기 전까지는 이 request는 캐싱됨.
+// `getStaticProps`와 비슷! (즉, 빌드 시점에 fetch)
+// `force-cache`가 디폴트 값이므로 생략 가능
+fetch(URL, { cache: 'force-cache' });
+```
+
+### SSR
+
+```jsx
+// 매번 요청 때마다 refetch 됨.
+// `getServerSideProps`와 비슷!
+fetch(URL, { cache: 'no-store' });
+```
+
+Next.js 13 버전에서 Data Fetching에 대한 내용은 다른 포스팅에서 자세히 다뤄보도록 하겠다.
+
+# 참고
+
+[https://nextjs.org/learn/foundations/how-nextjs-works/rendering](https://nextjs.org/learn/foundations/how-nextjs-works/rendering)
+
+[https://levelup.gitconnected.com/pre-rendering-with-next-js-feb51ed7e327](https://levelup.gitconnected.com/pre-rendering-with-next-js-feb51ed7e327)
+
+[https://ahnanne.tistory.com/92#1. Data Fetching](https://ahnanne.tistory.com/92#1.%20Data%20Fetching)
