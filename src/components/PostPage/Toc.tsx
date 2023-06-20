@@ -1,7 +1,7 @@
 'use client';
 
 import { Post } from 'contentlayer/generated';
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 
 interface TocProps {
   post: Post;
@@ -27,7 +27,7 @@ const Toc = ({ post }: TocProps) => {
 
     function onScroll() {
       const scrollPosition = scrollY + 112;
-      if (scrollPosition >= pinPos) setIsFixed(true);
+      if (pinPos !== undefined && scrollPosition >= pinPos) setIsFixed(true);
       else setIsFixed(false);
     }
 
@@ -59,19 +59,21 @@ const Toc = ({ post }: TocProps) => {
       prevScrollPos = currentScrollPos;
     });
 
-    const handler = (entries) => {
+    const handler: IntersectionObserverCallback = (entries) => {
       entries.forEach((entry) => {
         if (scrollDir === 'down' && entry.isIntersecting) {
-          setActiveId(entry.target.parentNode.id);
-          console.log(entry.target.parentNode.id);
+          const parentNode = entry.target.parentNode as HTMLElement;
+          if (parentNode) setActiveId(parentNode.id);
         }
         if (scrollDir === 'up' && !entry.isIntersecting) {
           const currentIdx = post.headings.findIndex(
-            (heading) => heading.slug === entry.target.parentNode.id
+            (heading: { level: string; text: string; slug: string }) => {
+              const parentNode = entry.target.parentNode as HTMLElement;
+              if (parentNode) heading.slug === parentNode.id;
+            }
           );
           if (currentIdx !== 0) {
             setActiveId(post.headings[currentIdx - 1].slug);
-            console.log(post.headings[currentIdx - 1].slug);
           }
         }
       });
@@ -81,7 +83,6 @@ const Toc = ({ post }: TocProps) => {
       threshold: 0.1,
       rootMargin: `0px 0px -${window.innerHeight - 48}px 0px`,
     };
-    console.log('option :', option);
 
     const observer = new IntersectionObserver(handler, option);
     const elements = document.querySelectorAll('h1, h2, h3, h4, h5, h6');
@@ -90,7 +91,6 @@ const Toc = ({ post }: TocProps) => {
     return () => observer.disconnect();
   }, [post.headings]);
 
-  const basicStyle = 'text-grey70 hover:text-p400 text-sm leading-none';
   const fixedStyle = isFixed ? 'fixed top-[112px]' : '';
 
   const scrollTopHandler = () => {
