@@ -1,13 +1,39 @@
-import PageContent from '@/components/common/ContentWrapper';
 import PageTitle from '@/components/common/PageTitle';
-import Image from 'next/image';
-
 import { allPosts } from 'contentlayer/generated';
 import PostItem from '@/components/PostItem/PostItem';
 import ContentWrapper from '@/components/common/ContentWrapper';
 import LinkTag from '@/components/common/LinkTag';
 import PageBody from '@/components/common/PageBody';
 import CategoryTitle from '@/components/CategoryPage/CategoryTitle';
+import { Metadata } from 'next';
+
+export const metadata: Metadata = {
+  description:
+    '안녕하세요, 웹 프론트엔드 개발자 이은지입니다. 이곳은 개발자로서 저의 성장 기록을 쌓아가는 공간입니다.',
+  openGraph: {
+    type: 'website',
+    title: '웹 프론트엔드 개발자 이은지 개발 블로그',
+    description: '이곳은 개발자로서 저의 성장 기록을 쌓아가는 공간입니다.',
+    locale: 'ko-KR',
+    siteName: 'eun-jee.com',
+    // url: '',
+    // images: [],
+  },
+  robots: {
+    index: true,
+    follow: true,
+  },
+  twitter: {
+    title: '웹 프론트엔드 개발자 이은지 개발 블로그',
+    description: '이곳은 개발자로서 저의 성장 기록을 쌓아가는 공간입니다.',
+    // card: '',
+  },
+  viewport: {
+    width: 'device-width',
+    initialScale: 1,
+    maximumScale: 1,
+  },
+};
 
 export default function Home() {
   return (
