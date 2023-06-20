@@ -1,6 +1,5 @@
 'use client';
 
-import { useFindActiveHeading } from '@/hooks/useFindActiveHeading';
 import { Post } from 'contentlayer/generated';
 import React, { useEffect, useRef, useState } from 'react';
 
@@ -89,7 +88,7 @@ const Toc = ({ post }: TocProps) => {
     elements.forEach((el) => observer.observe(el));
 
     return () => observer.disconnect();
-  }, []);
+  }, [post.headings]);
 
   const basicStyle = 'text-grey70 hover:text-p400 text-sm leading-none';
   const fixedStyle = isFixed ? 'fixed top-[112px]' : '';

@@ -5,7 +5,7 @@ import React, { useReducer, useState } from 'react';
 
 interface HeadingProps {
   children: React.ReactNode;
-  id: string;
+  id: string | undefined;
   tag: string;
 }
 

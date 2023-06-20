@@ -1,46 +1,42 @@
-import React, { useState } from 'react';
+import React, { DetailedHTMLProps, useState } from 'react';
 import Image from 'next/image';
 import { useMDXComponent } from 'next-contentlayer/hooks';
+import type { MDXComponents } from 'mdx/types';
 import Heading from './Heading';
+// import h1 from './h1';
 
-interface Props {
-  children: React.ReactNode;
-  id: string;
-}
-
-const components = {
-  h1: ({ children, id }: Props) => (
+const components: MDXComponents = {
+  // h1?: Component<React.DetailedHTMLProps<React.HTMLAttributes<HTMLHeadingElement>, HTMLHeadingElement>> | undefined
+  h1: ({ children, id }) => (
     <Heading id={id} tag="1">
       {children}
     </Heading>
   ),
-  h2: ({ children, id }: Props) => (
+  h2: ({ children, id }) => (
     <Heading id={id} tag="2">
       {children}
     </Heading>
   ),
-  h3: ({ children, id }: Props) => (
+  h3: ({ children, id }) => (
     <Heading id={id} tag="3">
       {children}
     </Heading>
   ),
-  h4: ({ children, id }: Props) => (
+  h4: ({ children, id }) => (
     <Heading id={id} tag="4">
       {children}
     </Heading>
   ),
-  h5: ({ children, id }: Props) => (
+  h5: ({ children, id }) => (
     <Heading id={id} tag="5">
       {children}
     </Heading>
   ),
-  h6: ({ children, id }: Props) => (
+  h6: ({ children, id }) => (
     <Heading id={id} tag="6">
       {children}
     </Heading>
   ),
-
-  Image,
 };
 
 interface MdxComponentsProps {
