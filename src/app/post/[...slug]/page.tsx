@@ -46,8 +46,8 @@ export function generateMetadata({ params }: PostDetailProps): Metadata {
 export default function PostPage({ params }: PostDetailProps) {
   const slug = params.slug.join('/');
   const post = allPosts.find((post) => post.slugAsParams === slug);
-  console.log('params :', params);
-  console.log(post?.slug, post?.slugAsParams);
+  // console.log('params :', params);
+  // console.log(post?.slug, post?.slugAsParams);
 
   if (!post) notFound();
 
