@@ -1,6 +1,6 @@
 import React from 'react';
 
-const SearchBar = (props) => {
+const SearchBar = () => {
   return <div></div>;
 };
 
