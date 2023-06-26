@@ -23,7 +23,7 @@ export function generateMetadata({ params }: PostDetailProps): Metadata {
       title: post?.title,
       description: post?.description,
       locale: 'ko-KR',
-      siteName: 'eun-jee.com',
+      siteName: 'https://eunjee.vercel.app/',
       // url: '',
     },
     robots: {

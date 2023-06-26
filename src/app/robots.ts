@@ -6,7 +6,7 @@ export default function robots(): MetadataRoute.Robots {
       userAgent: '*',
       allow: '/',
     },
-    host: 'https://eun-jee.com',
-    // sitemap: 'https://acme.com/sitemap.xml',
+    host: 'https://eunjee.vercel.app/',
+    sitemap: 'https://eunjee.vercel.app/sitemap.xml',
   };
 }
