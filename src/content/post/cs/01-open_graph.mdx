@@ -1,0 +1,133 @@
+---
+title: Open Graph 프로토콜 (feat. SEO)
+description: HTML의 head 태그 중 'og 태그'가 무엇일까?
+date: 2023-03-27
+type: Post
+---
+
+### 이 글을 쓰게 된 배경
+
+현재(2023년 3월 27일) 프로젝트를 진행하며 기술 블로그 글을 크롤링해서 사용자의 정보에 맞춰 추천해주는 서비스를 만들고 있다. 서버에서 글의 정보를 받아서 화면에 보여줘야 하는데, 해당 글의 미리보기 이미지는 프론트엔드에서 메타데이터로 긁어와야 한다고 한다.
+
+이로 인해 예상에 없던 'url의 메타데이터 스크랩핑' 기능을 구현하면서 새롭게 알게 된 오픈 그래프에 대해 정리해본다.
+
+# 들어가며
+
+카카오톡으로 어떤 인터넷 링크를 보내면 바로 해당 링크에 대한 미리보기용 제목, 설명, 이미지가 제공되는 것을 볼 수 있다. 카카오톡이 모든 링크에 대한 정보들을 데이터에 가지고 있을리는 없고...어떻게 미리보기를 볼 수 있는걸까?
+
+### 결론부터 말하자면?
+
+인터넷 프로토콜인 **Open Graph**를 통해 HTML의 `meta`태그에 담긴 메타데이터를 통해 미리보기용 정보를 가져올 수 있다!
+
+# Open Graph 프로토콜이란?
+
+> 2010년 페이스북이 만든 인터넷 프로토콜로서, 웹 페이지의 컨텐츠를 나타내는 메타데이터를 표준화하기 위해 만들어졌다.
+
+HTML 문서의 `meta` 태그에 담긴 메타 데이터들이 오픈 그라프 프로토콜을 준수하여 표기한 정보들이다.
+
+Velog이 아무 글이나 선택하여 개발자탭을 열어 HTML 문서를 보면 바로 오픈 그래프가 적용된 메타 태그를 확인할 수 있다.
+
+![](https://velog.velcdn.com/images/94applekoo/post/7765f701-53cf-4818-aa25-cdc3a26ccd11/image.png)
+
+위 사진을 보면 `meta` 태그 중 `property`가 `og:~`와 같은 형식으로 되어있는 태그들이 보인다. 여기서 `og`가 Open Graph를 의미한다.
+
+# Open Graph가 생겨난 이유
+
+Open Graph는 페이스북에서 소셜 미디어 환경에서 웹 페이지를 공유할 때 더 나은 사용자 경험을 제공하기 위해 개발되었다. 이전에는 페이스북과 같은 소셜 미디어에서 웹 페이지를 공유하면, 미리보기가 나타나지 않거나 불필요한 정보가 포함되는 경우가 있었다고 한다.
+
+이러한 문제를 해결하고자 페이스북에서 Open Graph를 개발했다. 오픈 그래프는 웹 페이지의 컨텐츠를 더 명확하게 전달할 수 하고, 웹 페이지의 제목, 설명, 이미지 등의 정보를 제공하여 사용자들이 링크를 클릭하기 전에 웹 페이지의 내용을 파악할 수 있도록 도와준다.
+
+# 작동원리
+
+HTML의 메타 태그에 담긴 데이터를 카카오톡, 페이스북과 같은 서비스의 크롤러가 방문하여 먼저 크롤링하여 미리보기를 생성한다.
+
+> 1. 사용자가 링크를 입력창에 입력합니다.
+> 2. 페이스북, 네이버 블로그, 카카오톡은 입력창의 문자열이 "링크"라는 것을 파악합니다. (흔히 말하는 정규표현식으로 해당 문자열이 링크라는 것을 알아냅니다.)
+> 3. 링크라는 것이 파악되면 페이스북, 네이버 블로그, 카카오톡의 크롤러는 미리 그 웹사이트를 방문해서 HTML head의 오픈그래프(Open Graph) 메타 데이터를 긁어옵니다.
+> 4. 이중에서도 og:title, og:description, og:image가 각각 제목, 설명, 이미지의 정보를 나타냅니다.
+> 5. 그리고 그 정보를 바탕으로 미리보기 화면을 생성해주게 됩니다.
+
+###### 출처 : [AB180 Blog](https://blog.ab180.co/posts/open-graph-as-a-website-preview)
+
+![](https://velog.velcdn.com/images/94applekoo/post/eb47ee8d-1467-4cc2-8567-349b87eebb3c/image.png)
+
+###### 출처 : [AB180 Blog](https://blog.ab180.co/posts/open-graph-as-a-website-preview)
+
+# Basic Metadata
+
+[Open Graph 공식 홈페이지](https://ogp.me/)
+
+위 링크를 클릭하여 공식 문서를 살펴보면 다양한 종류의 메타 데이터를 볼 수 있다. 그 중에서도 기본적인 메타 데이터 종류는 아래의 4가지다.
+
+![](https://velog.velcdn.com/images/94applekoo/post/022f7563-e432-4837-aad2-02ad742d6916/image.png)
+
+- `og:title` : 컨텐츠의 제목
+- `og:type` : 컨텐츠의 유형
+- `og:image` : 컨텐츠를 나타내는 이미지 URL
+- `og:url` : 유니크한 ID로 사용될 수 있는 표준 URL (각 링크를 식별할 수 있는 정보로 쓰이는 듯하다.)
+
+#### 사용 예시
+
+```html
+<html prefix="og: https://ogp.me/ns#">
+  <head>
+    <title>The Rock (1996)</title>
+    <meta property="og:title" content="The Rock" />
+    <meta property="og:type" content="video.movie" />
+    <meta property="og:url" content="https://www.imdb.com/title/tt0117500/" />
+    <meta
+      property="og:image"
+      content="https://ia.media-imdb.com/images/rock.jpg"
+    />
+    ...
+  </head>
+  ...
+</html>
+```
+
+이 외에도 구조화된 데이터를 표현할 수 있는 여러 메타 데이터 표기용 태그들이 지원되고 있는 것을 공식문서를 통해 확인할 수 있다.
+
+# 오픈 그래프 사용 분포
+
+오늘날 웹페이지들이 어떤 기술을 가지고 만들어졌는지 분석해주는 웹사이트 [builtwidth](https://trends.builtwith.com/docinfo)를 보면 현재(2023년 3월 27일 기준) 상위 8위에 위치하고 있는 것을 볼 수 있다.
+
+![](https://velog.velcdn.com/images/94applekoo/post/05e4f6e0-d733-47b9-9fb6-0b8d9dbfd927/image.png)
+
+이를 증명하듯 대부분의 웹 사이트를 들어가서 개발자 탭을 확인해보면 오픈 그래프 프로토콜을 사용한 메타 태그들을 확인할 수 있다.
+
+##### 오픈 그래프 공식 문서
+
+![](https://velog.velcdn.com/images/94applekoo/post/07cf17f6-f3f5-40a8-8cbc-eaa26e343179/image.png)
+
+##### 네이버
+
+![](https://velog.velcdn.com/images/94applekoo/post/98845460-95ca-44e4-a67d-256277c91ae8/image.png)
+
+##### 우아한 형제 기술 블로그
+
+![](https://velog.velcdn.com/images/94applekoo/post/8f8d3f50-7aa0-42bc-bf20-cb91cdcbe819/image.png)
+
+##### 백준
+
+![](https://velog.velcdn.com/images/94applekoo/post/72579264-9bd7-43b9-8667-b49f8370b7b7/image.png)
+
+# 예외가 있다.
+
+구글은 메타 데이터를 표시한 태그가 아예 없다.
+
+![](https://velog.velcdn.com/images/94applekoo/post/ca21b835-fd67-409a-9b1f-b3b85caec964/image.png)
+
+> 챗GPT 도와줘...!
+
+![](https://velog.velcdn.com/images/94applekoo/post/a9b98181-3840-4070-982f-b5f19e6e9f55/image.png)
+
+> schema.org는 또 뭔데...?
+
+검색 결과, '스키마 마크업'이라고 불리는 이 메타데이터 프로토콜은 웹 페이지의 검색 엔진 최적화(SEO)를 위해 쓰이는 프로토콜이라는 걸 알게 되었다!
+(오픈 그래프는 검색 엔진 최적화에 쓰이지 않는다.)
+
+# 결론
+
+Open Graph는 소셜 미디어 환경에서 웹 페이지에 대한 미리보기를 제공하기 위한 메타데이터 프로토콜이며, Schema.org는 검색 엔진이 웹 페이지의 정보를 구조화해서 분석할 수 있게 하기 위한 메타데이터 프로토콜이다.
+
+~~꿩 먹다 알 발견한..신기하고 방대한 웹의 세계...!~~
