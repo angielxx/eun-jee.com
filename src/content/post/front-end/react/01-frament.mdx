@@ -1,0 +1,135 @@
+---
+title: Fragment 사용이유 및 사용법
+description: Fragment를 왜 사용하는지 알아보자
+date: 2023-03-17
+type: Post
+---
+
+## Fragment가 어떤 상황에서 필요할까?
+
+리액트에서 한 컴포넌트가 여러 엘리먼트를 반환하는 경우가 많다. 다만, 컴포넌트의 return문에서는 여러 엘리먼트를 하나의 최상위 태그로 묶어 반환해야한다. 이 때, 엘리먼트를 묶는 최상위 태그로 `<div>`를 추가하게 되면 불필요한 노드가 추가되게 된다.
+
+> 이러한 상황에서 DOM에 불필요한 노드를 추가하지 않고 여러 엘리먼트를 묶어주는 역할을 하는 기능이 `Fragment`이다!
+
+위와 같은 상황의 예시를 보자.
+
+## Fragment가 필요한 상황의 예시
+
+###### 아래 예시는 리액트 공식문서에 설명되어 있는 예시입니다.
+
+```javascript
+function Table() {
+  return (
+    <table>
+      <tr>
+        <Columns />
+      </tr>
+    </table>
+  );
+}
+```
+
+여기 이 `Table` 컴포넌트가 유효하려면 `Columns` 컴포넌트가 여러 `<td>` 엘리먼트만 반환해야한다.
+
+```javascript
+function Columns() {
+ return (
+        <td>Hello</td>
+        <td>World</td>
+    );
+}
+```
+
+이렇게 return문에서 2개 이상의 엘리먼트를 반환하면 에러가 나기 때문에 우리는 보통 `<div>`를 사용해서 이 엘리먼트들을 묶어주게 된다.
+
+```javascript
+function Columns() {
+  return (
+    <div>
+      <td>Hello</td>
+      <td>World</td>
+    </div>
+  );
+}
+```
+
+이러한 결과, HTML 출력 결과는??
+
+```javascript
+<table>
+  <tr>
+    <div>
+      <td>Hello</td>
+      <td>World</td>
+    </div>
+  </tr>
+</table>
+```
+
+이렇게 불필요한 노드가 추가된다.
+
+## Fragment의 적용
+
+위의 예시에서 `<div>`대신 `<Fragment>`를 사용해보자.
+
+```javascript
+import React, { Fragment } from 'react';
+
+//...
+function Columns() {
+  return (
+    <Fragment>
+      <td>Hello</td>
+      <td>World</td>
+    </Fragment>
+  );
+}
+```
+
+이렇게 `<Fragment>`를 적용하면 HTML 출력은?
+
+```javascript
+<table>
+  <tr>
+    <td>Hello</td>
+    <td>World</td>
+  </tr>
+</table>
+```
+
+불필요한 노드 추가 없이 `<tr>` 태그 바로 하위에 `<td>` 태그가 위치한 걸 확인할 수 있다!
+
+### key의 사용
+
+fragment에는 `key`를 넣을 수 있다. key는 Fragment에 전달할 수 있는 유일한 어트리뷰트이다.
+
+```javascript
+{
+  props.items.map((item) => (
+    // React는 `key`가 없으면 key warning을 발생합니다.
+    <React.Fragment key={item.id}>
+      <dt>{item.term}</dt>
+      <dd>{item.description}</dd>
+    </React.Fragment>
+  ));
+}
+```
+
+## Fragment 단축 문법
+
+`Fragments`를 import하지 않고 사용할 수 있는 단축 문법이다. 빈 태그의 형식으로 `<>...</>`를 사용하면 된다.
+
+```javascript
+function Columns() {
+  return (
+    <>
+      <td>Hello</td>
+      <td>World</td>
+    </>
+  );
+}
+```
+
+### key를 사용할 수 없다.
+
+`Fragment`의 단축 문법 사용 시 key를 사용할 수 없다.
