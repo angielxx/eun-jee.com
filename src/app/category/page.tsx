@@ -9,7 +9,7 @@ export const metadata: Metadata = {
     '안녕하세요, 웹 프론트엔드 개발자 이은지입니다. 이곳은 개발자로서 저의 성장 기록을 쌓아가는 공간입니다.',
   openGraph: {
     type: 'website',
-    title: '웹 프론트엔드 개발자 이은지 개발 블로그',
+    title: '웹 프론트엔드 개발자 이은지의 개발 블로그',
     description: '이곳은 개발자로서 저의 성장 기록을 쌓아가는 공간입니다.',
     locale: 'ko-KR',
     siteName: 'https://eunjee.vercel.app/',
@@ -21,7 +21,7 @@ export const metadata: Metadata = {
     follow: true,
   },
   twitter: {
-    title: '웹 프론트엔드 개발자 이은지 개발 블로그',
+    title: '웹 프론트엔드 개발자 이은지의 개발 블로그',
     description: '이곳은 개발자로서 저의 성장 기록을 쌓아가는 공간입니다.',
     // card: '',
   },

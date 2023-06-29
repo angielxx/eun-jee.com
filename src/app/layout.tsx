@@ -58,7 +58,7 @@ const pretendard = localFont({
 });
 
 export const metadata = {
-  title: 'eun-jee.com',
+  title: 'eunjee blog',
   description: '프론트엔드 개발자 이은지의 개발 블로그',
 };
 
@@ -70,7 +70,7 @@ export default function RootLayout({ children }: RootLayoutProps) {
   return (
     <html lang="en" className={`${pretendard.variable} font-sans`}>
       <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
-        <body className="flex flex-col justify-center items-center font-light leading-7 w-full">
+        <body className="flex flex-col justify-center items-center font-light leading-7 w-full bg-bg text-text">
           <Header />
           <main className="xl:max-w-[768px] xl:w-[768px] md:max-w-[512px] md:w-[512px] w-[90%] max-w-[512px] mb-[256px]">
             {children}
