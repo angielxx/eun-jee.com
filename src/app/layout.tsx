@@ -1,6 +1,4 @@
-import Link from 'next/link';
 import './globals.css';
-import { Inter } from 'next/font/google';
 import localFont from 'next/font/local';
 import Header from '@/components/common/Header/Header';
 import { ThemeProvider } from '@/components/common/ThemeProvider';
@@ -68,7 +66,7 @@ interface RootLayoutProps {
 
 export default function RootLayout({ children }: RootLayoutProps) {
   return (
-    <html lang="en" className={`${pretendard.variable} font-sans`}>
+    <html lang="ko" className={`${pretendard.variable} font-sans`}>
       <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
         <body className="flex flex-col justify-center items-center font-light leading-7 w-full bg-bg text-text">
           <Header />

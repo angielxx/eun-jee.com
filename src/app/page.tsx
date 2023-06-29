@@ -33,6 +33,9 @@ export const metadata: Metadata = {
     initialScale: 1,
     maximumScale: 1,
   },
+  verification: {
+    google: 'ogU8CvUjVJywG3novomnkIUXwhN71WpRTcTNYmzKhU8',
+  },
 };
 
 export default function Home() {
