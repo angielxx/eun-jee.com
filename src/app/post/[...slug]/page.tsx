@@ -43,11 +43,15 @@ export function generateMetadata({ params }: PostDetailProps): Metadata {
   };
 }
 
-export default function PostPage({ params }: PostDetailProps) {
-  const slug = params.slug.join('/');
-  const post = allPosts.find((post) => post.slugAsParams === slug);
-  // console.log('params :', params);
-  // console.log(post?.slug, post?.slugAsParams);
+export async function generateStaticParams() {
+  return allPosts.map((post) => ({
+    slug: post.slugAsParams.split('/'),
+  }));
+}
+
+export default function PostPage({ params }: { params: { slug: string[] } }) {
+  const { slug } = params;
+  const post = allPosts.find((post) => post.slugAsParams === slug.join('/'));
 
   if (!post) notFound();
 
