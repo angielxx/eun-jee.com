@@ -3,7 +3,8 @@ const { withContentlayer } = require('next-contentlayer');
 /** @type {import('next').NextConfig} */
 
 const nextConfig = {
-  // output: 'export',
+  output: 'export',
+  experimental: { appDir: true },
   reactStrictMode: true,
   swcMinify: true,
   images: {
