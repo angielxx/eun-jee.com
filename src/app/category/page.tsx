@@ -1,6 +1,6 @@
 import CategoryTitle from '@/components/CategoryPage/CategoryTitle';
 import PostItemList from '@/components/PostItem/PostItemList';
-import { getAllCategories } from '@/lib/getAllCategories';
+// import { getAllCategories } from '@/lib/getAllCategories';
 import { allPosts } from 'contentlayer/generated';
 import { Metadata } from 'next';
 
@@ -33,7 +33,7 @@ export const metadata: Metadata = {
 };
 
 export default function Category() {
-  const [categories, subcategories] = getAllCategories();
+  // const [categories, subcategories] = getAllCategories();
 
   return (
     <>

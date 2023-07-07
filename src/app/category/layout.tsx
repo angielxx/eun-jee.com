@@ -1,7 +1,7 @@
 import ContentWrapper from '@/components/common/ContentWrapper';
 import PageBody from '@/components/common/PageBody';
 import PageTitle from '@/components/common/PageTitle';
-import { getAllCategories } from '@/lib/getAllCategories';
+// import { getAllCategories } from '@/lib/getAllCategories';
 import Image from 'next/image';
 
 interface CategoryMainProps {
@@ -9,7 +9,7 @@ interface CategoryMainProps {
 }
 
 export default function CategoryMain({ children }: CategoryMainProps) {
-  const [categories, subcategories] = getAllCategories();
+  // const [categories, subcategories] = getAllCategories();
 
   return (
     <div>
