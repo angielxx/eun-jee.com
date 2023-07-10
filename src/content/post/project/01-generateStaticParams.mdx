@@ -77,11 +77,11 @@ static exports를 통해 생성된 정적 파일들은 `./out` 폴더 안에 생
 
 아래는 route 타입에 따라 **`generateStaticParams`** 가 어떤 형식을 반환해야하는지를 나타냅니다. (공식 문서 발췌)
 
-| Type                      | Example Route                  | generateStaticParams Return Type        |
-| ------------------------- | ------------------------------ | --------------------------------------- |
-| Single Dynamic Segment    | /product/[id]                  | { id: string }[]                        |
-| Multiple Dynamic Segment  | /products/[category]/[product] | { category: string, product: string }[] |
-| Catch-all Dynamic Segment | /products/[...slug]            | { slug: string[] }[]                    |
+| Type                      | Example Route                  | generateStaticParams Return Type          |
+| ------------------------- | ------------------------------ | ----------------------------------------- |
+| Single Dynamic Segment    | /product/[id]                  | \{ id: string \}[]                        |
+| Multiple Dynamic Segment  | /products/[category]/[product] | \{ category: string, product: string \}[] |
+| Catch-all Dynamic Segment | /products/[...slug]            | \{ slug: string[] \}[]                    |
 
 참고로 `generateStaticParams`는 Pages 디렉토리를 사용하는 라우터에서는 `getStaticPaths`가 같은 기능을 수행합니다.
 
