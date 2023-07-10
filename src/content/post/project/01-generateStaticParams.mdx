@@ -41,7 +41,7 @@ static exports를 통해 생성된 정적 파일들은 `./out` 폴더 안에 생
 
 현재 생성된 html 파일이 `404.html`, `category.html`, `guestbook.html`, `index.html` 의 네 개 뿐이었습니다. 각 포스팅 페이지에 해당하는 html 파일은 다른 폴더를 뒤져봐도 찾을 수 없었습니다!
 
-그러니 **‘이 글의 html 파일을 달라’**고 요청을 보내면 **‘해당 파일은 없어’**라고 404 에러가 발생하는 게 당연했죠…!
+그러니 ‘이 글의 html 파일을 달라’고 요청을 보내면 ‘해당 파일은 없어’라고 404 에러가 발생하는 게 당연했죠…!
 
 결론적으로 현재 404 에러가 나고 있는 모든 경로들에 대해서 html 파일이 생성되야하는 것입니다.
 
@@ -55,13 +55,13 @@ static exports를 통해 생성된 정적 파일들은 `./out` 폴더 안에 생
 
 `generateStaticParams`에 대해 설명하고 있는공식문서를 읽어봅시다.
 
-> The `generateStaticParams` function can be used in combination with [dynamic route segments](https://nextjs.org/docs/app/building-your-application/routing/dynamic-routes) to **[statically generate](https://nextjs.org/docs/app/building-your-application/rendering/static-and-dynamic-rendering#static-rendering-default)** routes at build time instead of on-demand at request time.
+> The `generateStaticParams` function can be used in combination with [dynamic route segments](https://nextjs.org/docs/app/building-your-application/routing/dynamic-routes) to  [statically generate](https://nextjs.org/docs/app/building-your-application/rendering/static-and-dynamic-rendering#static-rendering-default)  routes at build time instead of on-demand at request time.
 
 > `generateStaticParams` 함수는 동적 라우팅과 함꼐 사용하여 페이지에 대한 각 요청을 받을 때마다 경로를 생성하는 것이 아닌, 빌드 타임에 정적으로 경로를 생성할 수 있습니다.
 
-여기서 **‘페이지에 대한 각 요청을 받을 때마다 경로를 생성’**하는 방식과 **‘빌드 타임에 정적으로 경로를 생성’**하는 방식은 각각 **SSR** 방식과 **SSG** 방식입니다. (SSG, SSR, CSR의 개념에 대해 공부하셨다면 바로 이해하실거에요.)
+여기서 ‘페이지에 대한 각 요청을 받을 때마다 경로를 생성’ 하는 방식과 ‘빌드 타임에 정적으로 경로를 생성’ 하는 방식은 각각 SSR 방식과 SSG 방식입니다. (SSG, SSR, CSR의 개념에 대해 공부하셨다면 바로 이해하실거에요.)
 
-**‘페이지에 대한 각 요청을 받을 때마다 경로를 생성’**하는 방식은 어떤 페이지에 대해 요청이 들어오면 그 때 페이지를 생성하여 클라이언트에게 전송하는 것이고, **‘빌드 타임에 정적으로 경로를 생성’**하는 방식은 미리 빌드 타임에 페이지를 생성해놓고, 어떤 요청이 들어오면 그 요청에 맞는 페이지(미리 만들어놓은)를 클라이언트에게 전송하는 것입니다.
+‘페이지에 대한 각 요청을 받을 때마다 경로를 생성’ 하는 방식은 어떤 페이지에 대해 요청이 들어오면 그 때 페이지를 생성하여 클라이언트에게 전송하는 것이고, ‘빌드 타임에 정적으로 경로를 생성’ 하는 방식은 미리 빌드 타임에 페이지를 생성해놓고, 어떤 요청이 들어오면 그 요청에 맞는 페이지(미리 만들어놓은)를 클라이언트에게 전송하는 것입니다.
 
 ### `generateStaticParams`이 하는 일
 
@@ -75,7 +75,7 @@ static exports를 통해 생성된 정적 파일들은 `./out` 폴더 안에 생
 
 예를 들자면, `/post/[slug]`의 형식으로 동적 라우팅 하고 있을 때 `generateStaticParams` 을 사용하면 `/post/[slug]`으로 라우팅되는 모든 실제 경로들을 계산해서 `[slug]`라는 dynamic segment 대응되는 params의 목록을 담은 배열을 반환합니다.
 
-아래는 route 타입에 따라 **`generateStaticParams`** 가 어떤 형식을 반환해야하는지를 나타냅니다. (공식 문서 발췌)
+아래는 route 타입에 따라 `generateStaticParams` 가 어떤 형식을 반환해야하는지를 나타냅니다. (공식 문서 발췌)
 
 | Type                      | Example Route                  | generateStaticParams Return Type          |
 | ------------------------- | ------------------------------ | ----------------------------------------- |
