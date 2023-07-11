@@ -4,6 +4,7 @@ const { withContentlayer } = require('next-contentlayer');
 
 const nextConfig = {
   output: 'export',
+  exportTrailingSlash: true,
   experimental: { appDir: true },
   reactStrictMode: true,
   swcMinify: true,
