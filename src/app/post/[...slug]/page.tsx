@@ -14,6 +14,7 @@ interface PostDetailProps {
 export function generateMetadata({ params }: PostDetailProps): Metadata {
   const slug = params.slug.join('/');
   const post = allPosts.find((post) => post.slugAsParams === slug);
+
   return {
     title: post?.title,
     description: post?.description,
@@ -23,8 +24,8 @@ export function generateMetadata({ params }: PostDetailProps): Metadata {
       title: post?.title,
       description: post?.description,
       locale: 'ko-KR',
-      siteName: 'https://eunjee.vercel.app/',
-      // url: '',
+      siteName: 'eun-jee.com',
+      url: `${'https://eun-jee.com/' + slug + '/'}`,
     },
     robots: {
       index: true,
@@ -33,7 +34,6 @@ export function generateMetadata({ params }: PostDetailProps): Metadata {
     twitter: {
       title: post?.title,
       description: post?.description,
-      // card: '',
     },
     viewport: {
       width: 'device-width',

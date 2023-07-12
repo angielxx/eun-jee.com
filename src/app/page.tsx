@@ -15,9 +15,8 @@ export const metadata: Metadata = {
     title: '웹 프론트엔드 개발자 이은지의 개발 블로그',
     description: '이곳은 개발자로서 저의 성장 기록을 쌓아가는 공간입니다.',
     locale: 'ko-KR',
-    siteName: 'https://eunjee.vercel.app/',
-    // url: '',
-    // images: [],
+    siteName: 'eun-jee.com',
+    url: 'https://eun-jee.com',
   },
   robots: {
     index: true,
@@ -26,7 +25,6 @@ export const metadata: Metadata = {
   twitter: {
     title: '웹 프론트엔드 개발자 이은지의 개발 블로그',
     description: '이곳은 개발자로서 저의 성장 기록을 쌓아가는 공간입니다.',
-    // card: '',
   },
   viewport: {
     width: 'device-width',
