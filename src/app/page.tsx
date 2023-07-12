@@ -32,7 +32,7 @@ export const metadata: Metadata = {
     maximumScale: 1,
   },
   verification: {
-    google: 'ogU8CvUjVJywG3novomnkIUXwhN71WpRTcTNYmzKhU8',
+    google: 'xsEe-80sUU0N1SZxzUhbr99Xj2h44QS5hCC_z1b1s8w',
     other: {
       'naver-site-verification': 'fd5d0fe560c2bd07785f355df7873a98bafc68e2',
     },
