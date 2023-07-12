@@ -1,14 +1,23 @@
+import { allPosts } from 'contentlayer/generated';
 import { MetadataRoute } from 'next';
 
 export default function sitemap(): MetadataRoute.Sitemap {
+  const posts = allPosts.map((post) => {
+    return {
+      url: `https://eun-jee.com/post/${post.slug.join('/')}/`,
+      lastModified: new Date(),
+    };
+  });
+
   return [
     {
-      url: 'https://eunjee.vercel.app/',
+      url: 'https://eun-jee.com',
       lastModified: new Date(),
     },
     {
-      url: 'https://eunjee.vercel.app/category',
+      url: 'https://eun-jee.com/category',
       lastModified: new Date(),
     },
+    ...posts,
   ];
 }
