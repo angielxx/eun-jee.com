@@ -3,6 +3,7 @@ import localFont from 'next/font/local';
 import Header from '@/components/common/Header/Header';
 import { ThemeProvider } from '@/components/common/ThemeProvider';
 import Footer from '@/components/common/Footer/Footer';
+import GoogleAnalytics from '@/components/common/Analytics';
 
 const pretendard = localFont({
   src: [
@@ -55,11 +56,6 @@ const pretendard = localFont({
   variable: '--font-pretendard',
 });
 
-export const metadata = {
-  title: 'eunjee blog',
-  description: '프론트엔드 개발자 이은지의 개발 블로그',
-};
-
 interface RootLayoutProps {
   children: React.ReactNode;
 }
@@ -67,6 +63,7 @@ interface RootLayoutProps {
 export default function RootLayout({ children }: RootLayoutProps) {
   return (
     <html lang="ko" className={`${pretendard.variable} font-sans`}>
+      <GoogleAnalytics GA_MEASUREMENT_ID="G-BWJ14RKZNJ" />
       <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
         <body className="flex flex-col justify-center items-center font-light leading-7 w-full bg-bg text-text">
           <Header />
