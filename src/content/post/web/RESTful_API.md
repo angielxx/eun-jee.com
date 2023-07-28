@@ -1,0 +1,199 @@
+---
+title: RESTful한 API 설계하기 위해 알아야할 것들
+description: REST API, URI 규칙, Path variable vs Query string 등 REST API를 설계하기 위해 필요한 내용들
+date: 2023-07-28
+type: Post
+---
+
+> 진짜 RESTful한 API는 뭔데? 지금까지 사용해온 API 서버들은 RESTful한 게 맞나?
+
+싸피에서 여러 프로젝트를 하면서 당연하게 REST API를 사용하여 서비스를 만들어왔지만, 개인 프로젝트를 하며 당연하게 API 명세를 작성하려다가 문득 의문이 들었다. 이게 맞나?
+
+API 설계를 더 제대로 하고 싶다는 생각과 함께, 지난 면접에서 REST API 관련한 질문에 명쾌하게 대답하지 못했던 것이 떠올랐다. REST API 개념을 다시 복습해보고 RESTful한 API를 제대로 설계해보자!
+
+# API란?
+
+먼저 API가 무엇인지 살펴보자.
+
+> API, Application Programming Interface
+> API는 컴퓨터나 프로그램 사이의 연결로, 일종의 소프트웨어 인터페이스이며 다른 종류의 소프트웨어에 서비스를 제공한다.
+
+![https://img1.daumcdn.net/thumb/R1280x0.fjpg/?fname=http://t1.daumcdn.net/brunch/service/user/8kCc/image/KqPoc0TbVmKlZi1ldFCyfNR0Kao.jpg](https://img1.daumcdn.net/thumb/R1280x0.fjpg/?fname=http://t1.daumcdn.net/brunch/service/user/8kCc/image/KqPoc0TbVmKlZi1ldFCyfNR0Kao.jpg)
+
+여러 블로그글을 읽어보니 API를 흔히 식당의 ‘점원’에 자주 비유하는 모습을 볼 수 있었다. API는 식당에서 점원이 주문을 받아 주방(시스템)에 전달하고 고객이 요구한 메뉴(데이터)를 서빙하는 것과 비슷하다. 이 과정에서 점원은 명시된 메뉴(API의 규격)만 주문받을 수 있다.
+
+즉, API는 소프트웨어/어플리케이션 간에 정보를 주고받는 데 필요한 규약이다. 이를 통해 서로 다른 소프트웨어나 서비스가 서로 ‘대화’하고 상호작용하며 데이터를 주고 받을 수 있다.
+
+# API의 종류
+
+그렇다면 API의 종류엔 무엇이 있을까? (~~REST API만 경험하다보니 REST API가 아닌 API에 대해서는 생각해보지 못했다.~~) 세상에는 REST API 뿐만 아니라 정말 다양한 API가 있다.
+
+### **SOAP API**
+
+SOAP은 “Simple Object Access Protocol”의 약자로, 단순 객체 접근 프로토콜을 사용하며 XML을 사용하여 메시지를 교환한다. 과거에 많이 사용한 방식이며 유연성이 떨어진다.
+
+### **RPC API**
+
+원격 프로시저 호출이라고 부르며, 클라이언트가 서버에서 함수나 프로시저를 완료하면 서버가 출력을 클라이언트로 다시 전송한다.
+
+### **Websocket API**
+
+REST와 같은 HTTP 기반 API와 달리 웹소켓은 단일 TCP 연결을 통해 전이중 통신 채널을 제공한다. 채팅 앱 및 게임과 같은 실시간 응용 프로그램에 유용하다.
+
+### **REST API**
+
+오늘날 웹에서 가장 많이 사용하는 API로, 클라이언트가 서버에 요청을 데이터로 전송하고 서버가 이 클라이언트 입력을 사용하여 내부 함수를 시작하고 출력 데이터를 다시 클라이언트에 반환한다. (아래에서 더 자세히 살펴보자)
+
+### **GraphQL**
+
+주문형 데이터 쿼리가 가능한 인터페이스로, GraphQL API를 사용하면 사용자는 백엔드 서비스에서 원하는 모든 것을 하나의 API 엔드포인트에서 요청할 수 있다. 이를 통해 불필요한 API 호출을 줄일 수 있다.
+
+# REST API란?
+
+REST는 “Representational State Transfer”의 줄임말로, REST API란 REST의 설계 원칙을 준수하는 API다.
+
+REST는 로이 필딩에 의해 처음 제안된 개념인데, 그는 네트워크 기반 애플리케이션을 만들기 위한 아키텍처 스타일로 REST를 제안했다. REST의 주요 개념은 네트워크화된 콘텐츠를 URL에 의해 고유하게 식별할 수 있는 리소스로 취급하는 것이다.
+
+## REST 설계 원칙
+
+### 1. Uniform interface : 통합된 인터페이스
+
+동일한 리소스에 대한 모든 요청은 요청의 출처에 관계없이 동일하게 보여야 한다.
+
+### 2. Client-server decoupling :
+
+REST API 설계에서 클라이언트와 서버 응용 프로그램은 서로 완전히 독립적이여야 한다. 클라이언트에서 알아야할 정보는 유일하게 요청된 리소스의 URI다. 이 외적인 방법으로 서버와 상호작용할 수 없다. 마찬가지로 서버는 HTTP를 통해 요청된 데이터를 전달하는 것 외에는 클라이언트를 수정할 수 없다.
+
+### 3. Statelessness : 무상태
+
+REST API는 상태를 저장하지 않는다. 이 뜻은 각 요청이 처리될 때 필요한 모든 정보를 포함해야 하는 것이다. 서버는 요청과 관련된 데이터를 저장할 수 없다.
+
+### 4. Cacheability : 캐시 가능성
+
+가능한 경우 리소스는 클라이언트 혹은 서버에서 캐시할 수 있어야 한다. 또한 서버의 응답은 전달된 리소스에 대해 캐싱이 허용되는지 여부에 대한 정보를 포함해야 한다.
+
+### 5. Layered system architecture : 계층화된 시스템 아키텍처
+
+호출과 응답은 서로 다른 계층을 거친다. 클라이언트와 서버 모두 대상 애플리케이션과 통신하는지 혹은 중간 매개체와 통신하는지 알 수 없도록 설계되어야 한다.
+
+### 6. Code on demand : 주문형 코드 (선택 사항)
+
+일반적으로 정적 리소스를 보내지만 필요한 경우 응답에 실행 코드가 포함될 수 있다. 이러한 경우 코드는 주문형으로만 실행되어야 한다.
+
+# RESTful API 디자인 가이드
+
+## 기본 원칙
+
+API 명세를 작성하며 들었던 의문을 해결할 수 있는 핵심 내용이 여기에 있다.
+
+> 그래서 어떻게 RESTful하게 API를 설계할 수 있는데?
+
+REST API 설계시 지켜야할 중요한 항목 2가지
+
+1. URI는 정보의 자원을 표현한다.
+2. 자원에 대한 행위는 HTTP 메서드로 표현한다.
+
+이 두 가지를 한 마디로 요약하자면
+
+> URI는 명사, HTTP 메서드는 동사
+
+라고 할 수 있다.
+
+잘못 설계된 API의 예시를 보며 어떤 의미인지 보자. Employees에 대한 API를 작성한다고 할 때
+
+- /getEmployee
+- /addNewEmployee
+- /updateEmployee
+- /deleteEmployee
+
+이런 식으로 API를 설계하게 되면 같은 리소스(Employee)에 대해 여러 중복되는 API 엔드포인트가 생성된다. 이에 따라 유지보수가 어려워진다.
+
+여기서 REST API 설계 원칙의 방법을 적용해보자.
+
+### 1. URI는 정보의 자원을 표현한다.
+
+URI는 정보의 자원을 표현하고, 이 말인 즉슨 URI는 명사(리소스를 나타내는)만 포함해야 한다.
+
+그렇다면 위의 URI들을 한 개의 엔드포인트로 통일할 수 있을 것이다.
+
+- /employee
+
+여기서 주의할 점은 리소스는 언제나 API 엔드포인트에서 복수형이어야 한다.
+
+- /employees
+
+만약 해당 리소스의 특정 데이터(1개)에 접근하고 싶다면 id를 URI에 전달할 수 있다.
+
+- /employees/34
+
+### 2. 자원에 대한 행위는 HTTP 메서드로 표현한다.
+
+그럼 employee라는 자원에 대해 생성, 조회, 갱신, 삭제를 표현했던 부분은 HTTP 메서드로 표현할 수 있다.
+
+- GET /employees
+- POST /employees
+- PUT /employees
+- DELETE /employees
+
+## 네이밍 컨벤션
+
+위의 기본 원칙을 포함하고 있는 네이밍 컨벤션이다.
+
+1. 명사를 사용 (컨트롤 자원의 경우만 예외적으로 동사)
+2. 소문자
+3. 명사는 복수형
+4. 구분자는 “-” 하이픈 사용 (언더바 “\_”, 카멜 케이스 X)
+5. url 마지막엔 슬래쉬를 포함하지 않음
+6. 파일 확장자는 포함하지 않음
+
+# Path variable vs Query string
+
+마지막으로 API의 URI를 설계하기 위해 URI를 통해 정보를 표현하는 두 가지 방법을 정리해보고자 한다.
+
+## Query string
+
+### 형식
+
+```sql
+/users?id=123
+```
+
+> 쿼리 스트링은 ? 다음에 오는 부분이다. &로 구분되는 키-값 쌍의 데이터를 서버에 전달하며, 검색이나 필터링에 주로 사용된다.
+
+### 예시
+
+쿼리 스트링 방식은 우리가 구글과 같은 사이트에 검색어를 입력했을 때 흔히 볼 수 있는 주소 형식이다. 구글에 ‘안녕’이라는 검색어를 입력하면 아래와 같은 주소의 페이지로 이동한다.
+
+```
+https://www.google.com/search?q=%EC%95%88%EB%85%95&hl=ko&sxsrf=AB5stBhLgUC2AioEf25xkbx8i3rkaKfPdg%3A1690519689199&source=hp&ei=iUjDZPX9CZmy2roP0MaCuA0&iflsig=AD69kcEAAAAAZMNWmS0ZSde8d0-qp6ex5gVZDKBv5GfC&ved=0ahUKEwi15rvMzLCAAxUZmVYBHVCjANcQ4dUDCAs&uact=5&oq=%EC%95%88%EB%85%95&gs_lp=Egdnd3Mtd2l6IgbslYjrhZUyBBAjGCcyCBAuGIAEGLEDMgsQLhiABBixAxiDATILEC4YgAQYsQMYgwEyBRAuGIAEMggQLhiABBixAzIIEC4YgAQYsQMyCxAAGIAEGLEDGIMBMgQQLhgDMgQQABgDSJwMUEdYywtwAngAkAEBmAGAAqAB8geqAQUwLjMuMrgBA8gBAPgBAagCCsICBxAjGOoCGCfCAgcQIxiKBRgnwgIHEAAYigUYQ8ICDRAuGIAEGMcBGNEDGArCAgUQABiABA&sclient=gws-wiz
+```
+
+‘https://www.google.com/search’ 바로 뒤에 있는 물음표 뒤로 ‘a=b’ 형식의 쌍이 ‘&’문자로 구분되어 이어지는 걸 확인할 수 있다.
+
+Query string은 이와 같이 여러가지 키-값 쌍의 데이터를 포함하여 서버에 전달할 수 있기 때문에, 데이터를 검색하거나 필터링하는 데 주로 사용된다.
+
+온라인 쇼핑몰 웹사이트에서 필터링 조건을 적용한 URL의 예시이다.
+
+```
+https://www.example.com/products?category=women&item=t-shirt&sort=price_low_to_high
+```
+
+물음표 뒤를 확인해보면 ‘category=women’, ‘item=t-shirt’, ‘sort=price_low_to_high’의 세 쌍의 데이터를 통해 ‘여성용 티셔츠를 검색하고 가격을 낮은 순서대로 정렬’하고 있는 것을 알 수 있다.
+
+## Path variable
+
+```sql
+/user/123
+```
+
+Path variable은 간단하다. 경로의 일부로서 변수 데이터를 전달한다. 이 경우 특정 리소스를 식별하고 싶은 경우 사용한다.
+
+##### 출처
+
+[https://aws.amazon.com/ko/what-is/api/](https://aws.amazon.com/ko/what-is/api/)
+
+[https://www.ibm.com/topics/rest-apis](https://www.ibm.com/topics/rest-apis)
+
+[https://wayhome25.github.io/etc/2017/11/26/restful-api-designing-guidelines/](https://wayhome25.github.io/etc/2017/11/26/restful-api-designing-guidelines/)
+
+[https://medium.com/@fullsour/when-should-you-use-path-variable-and-query-parameter-a346790e8a6d](https://medium.com/@fullsour/when-should-you-use-path-variable-and-query-parameter-a346790e8a6d)
