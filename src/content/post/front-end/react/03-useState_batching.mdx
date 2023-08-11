@@ -1,0 +1,211 @@
+---
+title: useState가 상태 변경하는 과정
+description: useState가 비동기적으로 동작하는 방식 때문에 발생하는 문제와 그 이유를 알아보자.
+date: 2023-03-17
+type: Post
+---
+
+React를 사용하면서 ‘useState는 비동기적으로 작동한다.’라고 알고 있었던 부분을 공식문서를 통해 그 작동원리를 더 자세히 뜯어보고자 한다.
+
+# 퀴즈
+
+아래 코드에서 button을 한 번 클릭하면 number 값은 무엇일까?
+
+```jsx
+import { useState } from 'react';
+
+export default function Counter() {
+  const [number, setNumber] = useState(0);
+
+  return (
+    <>
+      <h1>{number}</h1>
+      <button
+        onClick={() => {
+          setNumber(number + 1);
+          setNumber(number + 1);
+          setNumber(number + 1);
+        }}
+      >
+        +3
+      </button>
+    </>
+  );
+}
+```
+
+직관적으로 생각하면 setNumber(number+1)을 세 번 했으니 number는 3일 것 같지만, 정답은 1이다.
+
+왜 이런 현상이 발생할까?
+
+# State as a snapshot
+
+useState를 호출하면 리액트는 state를 계산해서 현재 렌더에 필요한 state를 snapshot으로 제공하고, 이 값은 해당 렌더 단계에서는 같은 값으로 일정하게 유지된다.
+
+그래서 위에서 봤던 코드에서 `setNumber(number + 1);` 에서 사용한 number의 값이 `setNumber`를 계속 호출해도 0으로 고정되어 있는 것이다.
+
+```jsx
+setNumber(0 + 1);
+setNumber(0 + 1);
+setNumber(0 + 1);
+```
+
+그럼 이제 세 번 호출된 `setNumber(0 + 1);`은 어떻게 처리될까?
+
+# React “batches” state updates
+
+> React “batches” state updates
+
+공식문서에서 위와 같이 설명하고 있다. Batch라는 영어 단어의 뜻은 ‘1회분으로 처리하다’이다. 즉, 리액트는 이벤트 핸들러의 모든 코드가 실행 완료되기를 기다렸다가 모든 상태 변경을 한 번에 실행한다.
+
+이러한 현상을 리액트에서 ‘batching’이라 하며, batching은 한 번의 이벤트 실행동안 재렌더가 여러 번 실행되는 것을 막아 렌더링을 최적화한다.
+
+이렇게 상태 변경을 한 번에 처리하는 과정은 다음 단계의 렌더 전에 실행된다. queue에 호출된 setNumber 함수를 넣어뒀다가 차례대로 실행한다.
+
+```jsx
+setNumber(0 + 1);
+setNumber(0 + 1);
+setNumber(0 + 1);
+```
+
+이렇게 연속적으로 호출된 setNumber(0 + 1)가 queue에 차례대로 줄을 선다.
+
+큐에 각 함수들이 줄 서 있는 상황을 아래처럼 표현할 수 있을 것이다.
+
+```jsx
+queue: [setNumber(0 + 1), setNumber(0 + 1), setNumber(0 + 1)];
+```
+
+여기서 큐에서 차례대로 꺼내 실행하면,
+
+1. 큐에서 함수 하나를 꺼낸다. setNumber(0 + 1)이므로 number는 1이 된다.
+2. 또 큐에서 함수 하나를 꺼낸다. setNumber(0 + 1)이므로 number는 1이 된다.
+3. 또 큐에서 함수 하나를 꺼낸다. setNumber(0 + 1)이므로 number는 1이 된다.
+4. 큐가 비었고 최종적으로 number는 1이다.
+
+이제 다음 렌더에서 컴포넌트에게 state의 snapshot으로 number = 1 을 제공한다.
+
+# useState에 updater 함수를 전달하는 경우
+
+이러한 상황을 방지하기 위해 이전 값을 사용하여 상태를 변경하는 것을 보장하는 방법으로, 아래처럼 useState에 콜백 함수를 전달할 수 있다.
+
+```jsx
+setSomething((prevState) => prevState + 1);
+```
+
+위의 예시를 이러한 방법으로 고쳐보자.
+
+```jsx
+import { useState } from 'react';
+
+export default function Counter() {
+  const [number, setNumber] = useState(0);
+
+  return (
+    <>
+      <h1>{number}</h1>
+      <button
+        onClick={() => {
+          setNumber((n) => n + 1);
+          setNumber((n) => n + 1);
+          setNumber((n) => n + 1);
+        }}
+      >
+        +3
+      </button>
+    </>
+  );
+}
+```
+
+그럼 이제 수정한 코드에서 button을 한 번 클릭했을 때 number의 값은 무엇일까? 정답은 3이다!
+
+```jsx
+setNumber((n) => n + 1);
+setNumber((n) => n + 1);
+setNumber((n) => n + 1);
+```
+
+여기서도 마찬가지로 호출된 각 setNumber(n ⇒ n + 1) 함수는 큐에 차례대로 줄을 선다.
+
+```jsx
+queue: [
+  setNumber((n) => n + 1),
+  setNumber((n) => n + 1),
+  setNumber((n) => n + 1),
+];
+```
+
+하나씩 큐에서 함수를 꺼내 실행하면,
+
+1. setNumber(n ⇒ n + 1)을 꺼냈다. 이전 상태값(n)은 0이었다. 그러므로 현재 상태값은 1(n + 1)이 된다.
+2. 또 setNumber(n ⇒ n + 1)을 꺼냈다. 이전 상태값(n)은 1이었다. 그러므로 현재 상태값은 2(n + 1)이 된다.
+3. 또 setNumber(n ⇒ n + 1)을 꺼냈다. 이전 상태값(n)은 2이었다. 그러므로 현재 상태값은 3n + 1)이 된다.
+4. 큐가 비었으므로 최종적으로 number는 3이다.
+
+그럼 여기서 의문이 하나 생긴다. setNumber(number + 1)에서도 이전 상태값이 있었을텐데, 왜 그렇게 동작했을까?
+
+# 직접 값을 전달하는 경우 이전 상태값은 무시된다.
+
+사실 setNumber(number + 1)에서도 이전 상태값은 로직 내부에 존재했었다. 다만 사용되지 않았을뿐!
+
+> `setNumber(number + 1)`는 `setNumber(0 + 1)`이고,
+> `setNumber(0 + 1)`은 `setNumber(n => 0 + 1)`이다.
+
+setNumber(number + 1)를 콜백 함수 형태로 바꿔보면 setNumber(n ⇒ number + 1)이다. 다만 이미 number가 0이라는 값으로 고정되어 있으므로 n이 계산하는 과정에서 사용되지 않을뿐이다.
+
+그럼 직접 값을 전달하는 방법과 콜백 함수를 전달하는 방법을 한 컴포넌트 내부에서 여러 번 섞어 사용하면 어떻게 될까?
+
+# 또 다른 퀴즈
+
+아래 예시에서 number값을 예상해보자. 1일까? 아님 5 혹은 6?
+
+```jsx
+import { useState } from 'react';
+
+export default function Counter() {
+  const [number, setNumber] = useState(0);
+
+  return (
+    <>
+      <h1>{number}</h1>
+      <button onClick={() => {
+			  setNumber(number + 5);
+			  setNumber(n => n + 1);
+			}}>
+    </>
+  )
+}
+```
+
+정답은 6이다!
+
+자, 다시 이전에 했던 것처럼 차례대로 큐에 담아보자. 그 전에 먼저 현재 렌더단계에서 number는 0으로 고정이다.
+
+```jsx
+setNumber(0 + 5);
+setNumber((n) => n + 1);
+```
+
+이 상태에서 각각 호출되어 큐에 차례대로 들어가면 아래와 같은 상태일 것이다.
+
+```jsx
+queue: [setNumber(0 + 5), setNumber((n) => n + 1)];
+```
+
+하나씩 꺼내어 실행해보자.
+
+1. `setNumber(0 + 5)`을 꺼냈다. 이는 즉 `setNumber(n ⇒ 0 + 5)`와 같은 것으로, n은 무시되므로 현재 상태값은 0 + 5의 값인 5가 된다.
+2. `setNumber(n => n + 1)`을 꺼냈다. 이전 상태값은 5였으므로 `setNumber(5 ⇒ 5 + 1)`이 되어 현재 상태값은 5 + 1의 값인 6이 된다.
+
+# 총정리
+
+> state 변경은 현재 렌더 단계에서 변수에 변화를 일으키지 않지만, 새로운 렌더를 요청한다.
+
+> 리액트는 이벤트 핸들러가 모두 실행 완료될 때까지 기다렸다가 상태 변경을 한 번에 처리한다. 이러한 과정을 batching이라고 부른다.
+
+> 하나의 이벤트에서 어떤 상태를 여러번 변경하기 위해서는 `setNumber(n => n + 1)`와 같이 updater 함수를 set 함수에 전달한다.
+
+참고
+
+[https://react.dev/learn/queueing-a-series-of-state-updates#what-happens-if-you-update-state-after-replacing-it](https://react.dev/learn/queueing-a-series-of-state-updates#what-happens-if-you-update-state-after-replacing-it)
