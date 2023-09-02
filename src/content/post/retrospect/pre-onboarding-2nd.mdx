@@ -1,11 +1,11 @@
 ---
-title: 프리온보딩 인턴쉽 2주차 과제 : 무한스크롤과 errorboundary
-description: 무한 스크롤의 각 페이지 범위에 맞춰 Error boundary와 Suspense를 구현한 과정과 회고
+title: '프리온보딩 인턴쉽 2주차 과제 : 무한스크롤과 errorboundary'
+description: '무한 스크롤의 각 페이지 범위에 맞춰 Error boundary와 Suspense를 구현한 과정과 회고'
 date: 2023-09-02
 type: Post
 ---
 
-# 과제의 주요 목표
+## 과제의 주요 목표
 
 (과제 요구사항 및 API 등은 외부 유출이 금지되어 있으므로 신경 쓴 부분 위주로 과제 내용을 간략하게 소개합니다.)
 
@@ -15,13 +15,13 @@ type: Post
 
 이러한 이유로 페이지 단위로 로딩 상태와 에러를 처리할 수 있도록 컴포넌트 구조를 설계했다. 이번 글에서는 이러한 방향 아래 무한스크롤을 구현하며 어떤 생각으로 설계를 하고, 어떤 어려움을 겪었는지 소개해보고자 한다.
 
-# Error Boundary란?
+## Error Boundary란?
 
 React 16에서 도입된 컨셉으로, 하위 컴포넌트에서 발생한 에러를 캐치하여 처리할 수 있는 컴포넌트다. Error Boundary는 리액트가 완성된 컴포넌트를 제공해주는 것이 아니라, 클래스형 컴포넌트의 메소드를 오버라이딩 해서 만들 수 있다. (현재 함수형 컴포넌트로 구현하는 것은 불가능하다고 한다.)
 
 기본적인 형식은 아래와 같다.
 
-```jsx
+```javascript
 class ErrorBoundary extends React.Component {
   constructor(props) {
     super(props);
@@ -51,15 +51,15 @@ class ErrorBoundary extends React.Component {
 
 이 글은 개념에 대한 설명보다 실제로 구현한 과정과 방법을 설명하고 있으므로, 자세한 개념은 다른 좋은 자료들이 많으니 먼저 공부하시는 것을 추천한다!
 
-# 구현 설명
+## 구현 설명
 
-## 컴포넌트의 구조
+#### 컴포넌트의 구조
 
 > 각 페이지별로 에러와 로딩 처리를 하여 더 좁은 범위에서 fallback UI를 제공하고 사용자에게 적절한 가이드를 제공하고 싶다.
 
 라는 생각을 가지고 고안한 방법은 각 페이지별로 Suspense(fetcher), Error Boundary로 감싸서 렌더링하는 것이다. 각 페이지 컴포넌트의 구조는 아래와 같다.
 
-```fsharp
+```javascript
 <ApiErrorBoundary> // 단일 페이지의 API 동작 중 발생한 에러를 처리
   <IssuePageFetcher> // 단일 페이지의 API 호출을 담당
     <IssueListPerPageContainer> // 각 페이지의 데이터를 화면에 렌더링하는 UI
@@ -69,7 +69,7 @@ class ErrorBoundary extends React.Component {
 
 여러 페이지가 렌더링된 상황을 추상화하여 표현해보자면 아래와 같은 구조가 될 것이다.
 
-```fsharp
+```javascript
 <ApiErrorBoundary> // 1번 페이지
   <IssuePageFetcher>
     <IssueListPerPageContainer>
@@ -90,19 +90,19 @@ class ErrorBoundary extends React.Component {
 
 API 요청 범위에 맞게 로직처리를 하기 위해선 각 페이지별로 이러한 구조를 유지하게 하는 것이 가장 중요했다.
 
-## 데이터는 어디서 제공해줄 것인가? - Context API
+### 데이터는 어디서 제공해줄 것인가? - Context API
 
 다른 요소들을 살펴보기 이전에 어떤 데이터를 어디서, 어떻게 제공하고 있는지 살펴보자.
 
 이번 과제에서는 무한 스크롤에서 사용할 ‘Issue List’와 이슈 상세 페이지에서 사용할 ‘Issue’의 두 가지의 데이터만 관리하면 됐다. 그래서 관리해야 할 데이터가 두 가지 밖에 없었기 때문에 다른 전역 상태 라이브러리를 사용하는 것보단 Context API를 사용하는 것이 더 가볍고 간편하겠다고 판단했다.
 
-### 이슈 상세 페이지에 필요한 Issue 데이터
+#### 이슈 상세 페이지에 필요한 Issue 데이터
 
 이슈 상세 페이지에서 사용하는 ‘Issue’ 데이터는 Provider에 굳이 저장할 필요없이 React Router의 loader 옵션을 사용하여 컴포넌트가 마운트되기 전에 fetch하여 이슈 상세 페이지에 제공할 수 있도록 했다.
 
 loader는 단순히 어떤 컴포넌트를 렌더링되기 전에 데이터 등을 준비하는 역할이다. ‘Issue’ 데이터를 아래와 같이 정의하고 라우터에서 적용해주었다.
 
-```jsx
+```javascript
 // issueLoader.ts
 import { getIssueById } from '@/apis/api';
 import { refineIssue } from '@/apis/service';
@@ -114,7 +114,7 @@ export const issueLoader = async (id: number) => {
 };
 ```
 
-```jsx
+```javascript
 // router.tsx
 import { createBrowserRouter } from 'react-router-dom';
 
@@ -149,7 +149,7 @@ export default router;
 
 이렇게 loader를 통해 가져온 데이터는 컴포넌트 내부에서 useLoaderData 함수를 호출하여 가져올 수 있다.
 
-```jsx
+```javascript
 // Issue.tsx
 export const Issue = () => {
   const issue = useLoaderData() as IssueItem;
@@ -158,11 +158,11 @@ export const Issue = () => {
 };
 ```
 
-### 무한스크롤에 사용할 IssueList 데이터
+#### 무한스크롤에 사용할 IssueList 데이터
 
 IssueList 데이터는 한 곳에서 사용하지만 IssueList 데이터와 관련한 여러 상태와 동작은 여러 컴포넌트에서 사용해야했기 때문에, 전역에 저장하여 여러 곳에 제공했다. state, dispatch로 나누어 context를 기능에 따라 분리하여 상태 변화에 따른 Provider의 재렌더링을 최소화할 수 있도록 했다. (state는 ‘상태’, dispatch는 ‘동작’인 셈)
 
-```jsx
+```javascript
 // IssueListProvider.tsx
 interface StateType {
   issueList: PageType[];
@@ -193,7 +193,7 @@ const IssueListProvider = ({ children }: { children: ReactNode }) => {
 
 주목해야할 점은 Provider에서 IssueList 데이터를 비롯하여 hasNextPage, Loading, Error, page(현재 페이지 번호)와 같은 API 처리 상태에 대한 데이터를 저장하여 다음 페이지를 불러오는 동작에 대한 조건을 제한하는 데 사용했다.
 
-```jsx
+```javascript
 // IssueListProvider.tsx
 
 // ...
@@ -211,7 +211,7 @@ const IssueListProvider = ({ children }: { children: ReactNode }) => {
 
 Provider에서 제공하는 dispatch의 경우, 현재 4가지의 함수를 가지고 있고, 각 페이지 데이터를 Fetch 함수는 Provider에서는 단순 요청만 하고 Fetcher에서 try-catch문을 작성하여 각 페이지별로 에러 캐치를 수행할 수 있도록 했다.
 
-```jsx
+```javascript
 // IssueListProvider.tsx
 
 // ...
@@ -234,11 +234,11 @@ const IssueListProvider = ({ children }: { children: ReactNode }) => {
 };
 ```
 
-## API 비동기 동작을 처리 - ApiErrorBoundary, Fetcher
+### API 비동기 동작을 처리 - ApiErrorBoundary, Fetcher
 
 위에서 말했듯이 페이지 컴포넌트의 구조는 아래와 같다.
 
-```jsx
+```javascript
 <ApiErrorBoundary> // 단일 페이지의 API 동작 중 발생한 에러를 처리
   <IssuePageFetcher> // 단일 페이지의 API 호출을 담당
     <IssueListPerPageContainer> // 각 페이지의 데이터를 화면에 렌더링하는 UI
@@ -248,11 +248,11 @@ const IssueListProvider = ({ children }: { children: ReactNode }) => {
 
 여기서 UI를 감싸고 있는 IssuePageFetcher와 ApiErrorBoundary의 역할과 코드를 살펴보자.
 
-### IssuePageFetcher
+#### IssuePageFetcher
 
 먼저 IssuePageFetcher는 각 페이지의 API 호출을 담당하고 Suspense를 대체하는 컴포넌트라고 했다. Fetcher는 각 페이지에 대한 API 호출상태를 담당하는 역할로, 각 페이지에 대한 데이터 호출 후 try-catch문을 사용해 loading, error를 처리한 뒤 loading 상태에 따라 하위 컴포넌트를 반환한다.
 
-```jsx
+```javascript
 // IssuePageFetcher.tsx
 const IssuePageFetcher = ({ children, page }: Props) => {
   const { state, dispatch } = useContextNullCheck();
@@ -304,11 +304,11 @@ const IssuePageFetcher = ({ children, page }: Props) => {
 };
 ```
 
-### ApiErrorBoundary
+#### ApiErrorBoundary
 
 Fetcher에서 throw한 에러를 받아 에러에 따라 분기처리하여 ApiErrorBoundary에서 Fallback UI를 렌더하거나, 그럴 수 없는 경우 rethrow했다. Github API 공식문서를 참고하여 Github API 관련 에러만 ApiErrorBoundary에서 처리하고 그 외의 에러는 rethrow했다.
 
-```jsx
+```javascript
 class ApiErrorBoundary extends Component<Props, State> {
    //...
 
@@ -349,7 +349,7 @@ class ApiErrorBoundary extends Component<Props, State> {
 }
 ```
 
-## 무한 스크롤의 구현
+### 무한 스크롤의 구현
 
 스크롤 이벤트를 사용하여 스크롤이 맨 아래에 왔는지에 대한 상태를 제공하는 커스텀 훅을 정의했다.
 
@@ -357,7 +357,7 @@ class ApiErrorBoundary extends Component<Props, State> {
 
 lockScroll, unlockScroll을 적용하기 전에는 이전 페이지의 로딩이 완료되기도 전에 다음 페이지가 불러와지며 loading ui가 여러 개 화면에 보여지는 현상이 발생했다.
 
-```jsx
+```javascript
 // useDetectScroll.tsx
 import { useCallback, useEffect, useState } from 'react';
 
@@ -402,7 +402,7 @@ export const useDetectScroll = () => {
 
 다음은 무한스크롤을 보여주는 Home 화면의 컴포넌트다.
 
-```jsx
+```javascript
 // Home.tsx
 export const Home = () => {
   const [pageList, setPageList] = useState([1]);
@@ -442,7 +442,7 @@ export const Home = () => {
 
 특히, 과제 제출 이후에도 계속 고전했던 부분은 위에서 언급한 ‘이전 페이지의 로딩이 완료되기도 전에 다음 페이지가 불러와지며 loading ui가 여러 개 화면에 보여지는 현상’을 해결하는 과정이었다. 위 Home 컴포넌트에서 아래 코드를 살펴보면
 
-```jsx
+```javascript
 useEffect(() => {
   if (isEnd) {
     if (!prevPageIsLoading && hasNextPage) {
@@ -457,7 +457,7 @@ useEffect(() => {
 
 이와 같이 스크롤이 맨 아래에 오더라도 이전 페이지의 로딩이 완료되지 않았거나 다음 페이지가 없다면(`if (!prevPageIsLoading && hasNextPage)`) PageList에 페이지를 추가하지 않도록 제한하여 해결할 수 있었다.
 
-# 회고
+## 회고
 
 > 설계를 고민하는 과정이 재밌었다!
 
@@ -469,7 +469,7 @@ useEffect(() => {
 
 예전부터 Error Boundary에 대해 궁금했었는데 이번 기회를 통해 Error Boundary의 개념과 사용법 등 에러 핸들링에 대해 많은 공부가 됐다. (실무 레벨의 에러 핸들링은 얼마나 더 복잡할지 감이 안온다.) 더 복잡한 분기처리나 사용자가 에러를 처리할 수 있는 가이드를 제공하는 것은 아직은 너무 어렵다. 이 부분은 이번 과제를 하면서 시간이 너무 부족해서 개인과제에서는 제대로 적용해보지 못했는데, 프리온보딩 인턴십 과정이 끝나면 과제의 완성도를 높이면서 적용해볼 생각이다.
 
-# 참고
+## 참고
 
 [https://jbee.io/react/error-declarative-handling-1/](https://jbee.io/react/error-declarative-handling-1/)
 [https://jbee.io/react/error-declarative-handling-2/](https://jbee.io/react/error-declarative-handling-2/)
