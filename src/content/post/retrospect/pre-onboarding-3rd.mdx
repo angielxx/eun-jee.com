@@ -1,0 +1,393 @@
+---
+title: '프리온보딩 3주차 과제 : 검색창 구현'
+description: '무한 스크롤의 각 페이지 범위에 맞춰 Error boundary와 Suspense를 구현한 과정과 회고'
+date: 2023-09-20
+type: Post
+---
+
+# 과제의 주요 목표
+
+과제의 주제는 한국임상정보 웹사이트([https://clinicaltrialskorea.com/](https://clinicaltrialskorea.com/))의 검색창을 클론코딩하는 것이었고,
+
+주요한 목표는 아래의 세 가지였습니다.
+
+1. 검색창 구현 : 키보드만으로 검색창을 사용할 수 있도록 키보드 이벤트 핸들링
+2. 검색어 추천 기능 구현 : 검색어에 따른 추천 검색어 API 요청 횟수를 최적화
+3. 캐싱 기능 구현 : API 호출 별로 로컬 캐싱 구현하기
+
+이번 과제는 쉬울 줄 알았지만, 의외로 키보드 이벤트 핸들링 부분에서 오랜 시간 고전했습니다. 각 관심사마다 모듈을 분리하기 위해 초반에 어느 책임의 단위로 모듈을 분리할 지 고심했습니다. 결과적으로 고심한 것 대비 설계가 맘에 들지는 않아 모든 과정이 끝난 후 리팩토링하며 코드 구조를 재정비해 볼 생각입니다.
+
+우선 이번 포스팅에서는 리팩토링 전에 어떻게 과제를 수행했는지 풀어보겠습니다.
+
+# 결과물
+
+[https://pre-onboarding-12th-3rd.vercel.app/](https://pre-onboarding-12th-3rd.vercel.app/)
+
+우선 최종 결과물은 위 링크를 통해 확인하실 수 있습니다.
+
+제공된 json 서버의 경우 vercel로 배포하여 사용하였습니다.
+
+# 구현 목표
+
+클론코딩 대상으로 제시된 웹사이트의 검색창이 기능적으로 불완전한 부분이 있어, 기본적인 틀은 한국임상정보의 검색창을 클론하되 기능적인 부분은 구글의 검색창을 참고하여 구현했습니다.
+
+구글 검색창을 관찰해 본 결과,
+
+1. 사용자의 입력값 표시 : 검색어 리스트 최상단에 사용자의 입력값 보존하여 표시
+2. 선택된 추천 검색어 검색창에 반영 : 추천 검색어로 이동시 input 창의 내용이 이동한 검색어로 바뀜
+3. 선택된 추천 검색어에서 텍스트 변화시 사용자의 입력값에도 반영
+4. 사용자가 입력 중일 때는 사용자의 입력값을 표시하는 첫번째 아이템이 선택되어 있고, 추천 검색어로 이동하며 선택된 아이템 변경
+
+이렇게 네 가지의 요구사항을 만족해야 했습니다.
+
+![01_구글.gif](/images/post/retrospect/pre-onboarding-3rd/01.gif)
+
+# 구현 설명
+
+비교적 구현하기 쉬웠던 기능들부터 설명해보도록 하겠습니다.
+
+## 1. 로컬 캐싱 및 최근 검색어
+
+저는 개인적으로 전역 상태 관리 라이브러리 중에서 redux devtool을 사용할 수 있는 zustand를 선호하는 편입니다. 이번 과제에서 zustand를 사용했고, 캐시와 최근 검색어를 저장하는데에 zustand의 persist 미들웨어를 사용하여 브라우저의 localstorage에 저장했습니다.
+
+### 로컬 캐싱
+
+캐싱, 최근 검색어, 검색창, API 요청의 각 기능에 따라 전역 스토어를 분리하여 작성했습니다. 캐싱을 담당하는 스토어 cacheStore의 경우, 검색어를 key로 캐시 기한(`due`)과 함께 캐시할 데이터(`data`)를 저장했습니다. 캐시를 저장하는 setCache, 캐시된 데이터를 찾는 findCache의 두 가지 메서드를 만들어 사용했습니다.
+
+`setCache`는 검색어 `key`와 데이터 `data`, 만료 시간 `expireTime`을 인자로 받아 데이터를 캐시합니다.
+
+```tsx
+setCache: (key, data, expireTime = DEFAULT_EXPIRE_TIME): void => {
+          const due = Date.now() + expireTime;
+          set(state => ({ cache: { ...state.cache, [key]: { data, due } } }));
+        },
+```
+
+`findCache`는 검색어 `key`를 받아 캐시된 데이터가 있는지 찾고 해당 데이터의 유무, 만료여부에 따라 해당 데이터를 반환하거나 undefined를 반환합니다. 글을 쓰며 보니 데이터가 만료된 경우(`if (hasExpired)`) 해당 데이터를 삭제하는 로직도 추가해야겠네요.
+
+```tsx
+// 검색어 key를 받아 캐시된 데이터
+findCache: key => {
+          const cacheData = get().cache[key];
+          if (cacheData) {
+            const hasExpired = cacheData.due < Date.now();
+            if (hasExpired) return undefined;
+            return cacheData.data;
+          } else {
+            return undefined;
+          }
+        },
+```
+
+cacheStore 전체 코드
+
+```tsx
+// src/stores/cacheStore.ts
+type CacheEntry = {
+  data: DataType; // DataType은 커스텀 정의한 타입입니다.
+  due: number;
+};
+
+type State = {
+  cache: Record<string, CacheEntry>;
+  setCache: (key: string, data: DataType, expireTime?: number) => void;
+  findCache: (key: string) => DataType | undefined;
+};
+
+export const DEFAULT_EXPIRE_TIME = 1000 * 60 * 60;
+
+const useCacheStore = create<State>()(
+  devtools(
+    persist(
+      (set, get) => ({
+        cache: {},
+
+        setCache: (key, data, expireTime = DEFAULT_EXPIRE_TIME): void => {
+          const due = Date.now() + expireTime;
+          set((state) => ({ cache: { ...state.cache, [key]: { data, due } } }));
+        },
+
+        findCache: (key) => {
+          const cacheData = get().cache[key];
+          if (cacheData) {
+            const hasExpired = cacheData.due < Date.now();
+            if (hasExpired) return undefined;
+            return cacheData.data;
+          } else {
+            return undefined;
+          }
+        },
+      }),
+      { name: 'cacheStore' }
+    )
+  )
+);
+
+export default useCacheStore;
+```
+
+### 최근 검색어
+
+최근 검색어도 cacheStore와 마찬가지로 최근 검색어만 담당하는 recentKeywordStore를 따로 작성했습니다.
+
+최근 검색어를 저장하는 로직의 경우 최대 10개까지만 저장할 수 있도록 하고, 중복되는 최근 검색어가 없도록 했습니다. 현재 저장하려는 검색어가 배열 안에 이미 있는 경우(`if (currentRecentList.includes(keyword))`), 해당 검색어를 배열에서 삭제하고 최상단에 해당 검색어를 추가했습니다.
+
+```tsx
+addKeyword: (keyword: string) => {
+          let currentRecentList = get().recentKeywords;
+
+          if (currentRecentList.includes(keyword)) {
+            const idx = currentRecentList.indexOf(keyword);
+            currentRecentList = [
+              ...currentRecentList.slice(0, idx),
+              ...currentRecentList.slice(idx + 1),
+            ];
+          }
+          let updatedKeywords = [keyword, ...currentRecentList];
+
+          if (updatedKeywords.length > 10) {
+            updatedKeywords = updatedKeywords.slice(updatedKeywords.length - 10);
+          }
+
+          set({ recentKeywords: updatedKeywords });
+        },
+      }),
+```
+
+recentKeywordStore 전체 코드
+
+```tsx
+type State = {
+  recentKeywords: string[];
+  addKeyword: (keyword: string) => void;
+};
+
+const useRecentKeywordStore = create<State>()(
+  devtools(
+    persist(
+      (set, get) => ({
+        recentKeywords: [],
+
+        addKeyword: (keyword: string) => {
+          let currentRecentList = get().recentKeywords;
+
+          if (currentRecentList.includes(keyword)) {
+            const idx = currentRecentList.indexOf(keyword);
+            currentRecentList = [
+              ...currentRecentList.slice(0, idx),
+              ...currentRecentList.slice(idx + 1),
+            ];
+          }
+          let updatedKeywords = [keyword, ...currentRecentList];
+
+          if (updatedKeywords.length > 10) {
+            updatedKeywords = updatedKeywords.slice(
+              updatedKeywords.length - 10
+            );
+          }
+
+          set({ recentKeywords: updatedKeywords });
+        },
+      }),
+      { name: 'recentKeywordStore' }
+    )
+  )
+);
+
+export default useRecentKeywordStore;
+```
+
+## 2. 검색창
+
+### 설계 구조 설명
+
+과정으로 설명하기가 어려운 관계로 결과물을 기준으로 어떤 구조로 설계되어 있는지 설명해보겠습니다.
+
+![02.png](/images/post/retrospect/pre-onboarding-3rd/02.png)
+)
+
+먼저 컴포넌트 구조는 크게 ‘검색창(`SearchInput`)’과 ‘검색어 리스트(`KeywordsList`)’ 두 가지로 나눌 수 있습니다.
+
+검색창 관련 상태와 액션을 담당하는 keywordStore를 따로 작성했습니다. 사용자의 입력값과 사용자가 선택한 검색어를 동시에 표시해야 하기 때문에 아래 두 가지 값을 저장해야 했습니다.
+
+1. 최종 선택된 검색어 (`keyword`)
+2. 사용자의 입력값 (`inputValue`)
+
+각각 keyword의 경우 검색창에, inputValue의 경우 검색어 리스트 중 가장 상단에 표시했습니다.
+
+여기서 추천 검색어 혹은 최근 검색어를 선택하는 기능을 위해 selectedId라는 상태를 가지고 있는데, 이 값은 디폴트는 -1로 두어 해당 값이 -1인 경우 검색창에 사용자의 입력값이 반영되게 하였습니다.
+
+1. selectedId이 -1인 경우 → 사용자의 입력값이 선택된 것으로 간주하고 검색창에 사용자의 입력값을 반영
+2. selectedId이 0 이상인 경우 → 최근 검색어 혹은 추천 검색어 리스트 중 index가 일치하는 검색어를 검색창에 반영
+
+또한 사용자의 입력값이 변화할 때마다 해당 입력값과 관련한 추천 검색어를 API로 요청하여 그 응답을 리스트로 보여주게 됩니다. 여기서 키보드를 사용하여 최근 검색어 혹은 추천 검색어 리스트로 이동했을 때, 추천 검색어를 요청하는 API가 요청되지 않도록 막을 필요가 있었습니다.
+
+이를 위해 키보드가 움직였는지 아닌지에 대한 상태인 isKeyDown이라는 값을 두어, isKeyDown이 true일 때 API 요청이 가지 않도록 제한했습니다.
+
+위 내용에 따라 작성된 keywordStore입니다.
+
+```tsx
+// src/stores/keywordStore.ts
+const useKeywordStore = create<State>()(
+  devtools((set, get) => ({
+    isShowList: false,
+    isKeyDown: false,
+
+    keyword: '',
+    inputValue: '',
+
+    selectedId: -1,
+    keywordsList: [],
+
+    setState: (newState) => set({ ...get(), ...newState }),
+
+    setIsShowList: (isShowList) => set({ ...get(), isShowList }),
+    setIsKeyDown: (isKeyDown) => set({ ...get(), isKeyDown }),
+
+    setKeyword: (keyword) => set({ ...get(), keyword }),
+    setInputValue: (inputValue) => set({ ...get(), inputValue }),
+
+    setSelectedId: (selectedId) => set({ ...get(), selectedId }),
+    setKeywordsList: (keywordsList) => set({ ...get(), keywordsList }),
+  }))
+);
+
+export default useKeywordStore;
+```
+
+휴, 이걸 이렇게 정리하기 위해 정말 머리 아프게 고민했는지 모릅니다 😂
+
+이제 각 컴포넌트 내부에서 어떻게 구현되어 있는지 살펴보겠습니다.
+
+### Input의 change 이벤트 핸들러
+
+input의 change 이벤트에서는 inputValue와 Keyword 모두에 input 값을 반영하여 변경했습니다. 또한 selectedId와 isKeyDown은 초기화시켰습니다.
+
+```tsx
+const keywordOnChange = (e: ChangeEvent<HTMLInputElement>) => {
+  const { value } = e.target;
+
+  setIsKeyDown(false);
+  setInputValue(value);
+  setKeyword(value);
+  setSelectedId(-1);
+  setIsShowList(true);
+};
+```
+
+### keydown 이벤트 핸들러
+
+keyDown 핸들러에서는 두 가지 중요한 로직이 있습니다.
+
+1. 한글 입력 시 핸들러 중복 호출 방지
+   - IME composition을 통해 OS와 브라우저 두 곳에서 keydown이벤트가 처리되기 때문에 핸들러가 두 번 호출되는 문제가 있었습니다 이를 방지하기 위해 keyboardEvent의 isComposing 속성이 true 일 때 핸들러가 작동하지 않도록 방지했습니다.
+2. 위, 아래 방향키 입력 시 커서 이동 방지
+   - 위, 아래 방향키 입력 시 커서가 이동되는 현상이 발생했습니다. 이러한 현상을 방지하기 위해 event.preventDefault()로 기본 동작을 통한 커서 이동을 방지했습니다.
+
+```tsx
+const handleKeyDown = async (event: KeyboardEvent<HTMLInputElement>) => {
+  // 한글 입력시 중복 처리 방지
+  if (event.nativeEvent.isComposing) return;
+
+  const { key } = event;
+
+  if (key === 'ArrowUp') {
+    event.preventDefault();
+    setIsKeyDown(true);
+    setSelectedId(Math.max(selectedId - 1, -1));
+  } else if (key === 'ArrowDown') {
+    event.preventDefault();
+    setIsKeyDown(true);
+    setSelectedId(Math.min(selectedId + 1, keywordsList.length - 1));
+  } else if (key === 'Enter' && keyword.trim()) {
+    event.preventDefault();
+    addKeyword(keyword);
+    setIsKeyDown(false);
+    setIsShowList(false);
+    setKeyword('');
+    await setInputValue('');
+    setSelectedId(-1);
+    inputRef.current?.blur();
+  }
+};
+```
+
+### 추천 검색어 API 요청
+
+추천 검색어 API 요청 횟수를 최적화하는 방법으로 debounce를 사용했습니다. 이번 과제의 경우 검색어 값을 디바운스하는 로직으로 구현했습니다. 하지만 이 경우 렌더링이 여러번 되는 문제가 있으므로, API 요청 함수 자체를 디바운스하는 방식으로 리팩토링 할 예정입니다.
+
+값을 받아 디바운스된 값을 반환하는 커스텀 훅을 작성하여 사용했습니다.
+
+```tsx
+// src/hooks/useDebounce.tsx
+import { useState, useEffect } from 'react';
+
+export default function useDebounce<T>(value: T, delay = 300) {
+  const [debouncedValue, setDebouncedValue] = useState(value);
+
+  useEffect(() => {
+    const timerId = setTimeout(() => {
+      setDebouncedValue(value);
+    }, delay);
+
+    return () => {
+      clearTimeout(timerId);
+    };
+  }, [value, delay]);
+
+  return debouncedValue;
+}
+```
+
+검색어에 대한 API 호출을 담당하는 커스텀 훅 useSearchQuery를 정의했습니다. 검색어에 대한 API 호출을 하기 전 'cache hit'인 경우 캐시된 데이터를 사용하고, 'cache miss'인 경우 API를 호출하도록 했습니다.
+
+```tsx
+// src/hooks/useSearchQuery.tsx
+export const useSearchQuery = () => {
+  const { setCache, findCache } = useCacheStore((state) => state);
+
+  const { keyword, isKeyDown } = useKeywordStore((state) => state);
+
+  const { setIsLoading, setData } = useFetchStore((state) => state);
+
+  const debouncedKeyword = useDebounce(keyword, 300);
+
+  useEffect(() => {
+    const fetchData = async (text: string) => {
+      if (isKeyDown) return;
+
+      try {
+        setIsLoading(true);
+        const { data } = await searchByKeyword(text);
+        setData(data);
+        setCache(text, data);
+      } catch (err) {
+        setError(err);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    if (isKeyDown) return;
+    if (keyword === '') return;
+
+    const cacheResult = findCache(keyword);
+
+    if (cacheResult) {
+      // 'cache hit'
+      setData(cacheResult);
+    } else {
+      // 'cache miss'
+      fetchData(debouncedKeyword);
+    }
+  }, [isKeyDown, keyword, debouncedKeyword]);
+
+  return;
+};
+```
+
+# 회고
+
+키보드 이벤트는 처음 다뤄봤는데, 흔하게 쓰던 검색창이 이렇게 어려울 줄은 예상하지 못했다. 쉬울 줄 알았는데…
+
+가독성과 확장성, 유지보수성에 신경을 쓰며 코드를 작성하는 나의 모습을 보며 부쩍 많이 성장했다고 느낀다. 특히, 사전과제로 제출한 코드를 생각해보면 코드 퀄리티가 엄!청! 좋아졌다는 것을 알 수 있다.
