@@ -1,0 +1,445 @@
+---
+title: 'Throttle를 바닐라 자바스크립트, 그리고 리액트에서 구현하기'
+description: 쓰로틀의 바닐라 자바스크립트 에제와 리액트에서 커스텀 훅으로 구현하기 위한 과정
+date: 2023-10-19
+type: Post
+---
+
+## 들어가며
+
+오늘은 Debounce 에 이어 Throttle을 바닐라 자바스크립트와 리액트에서 각각 구현해보도록 하겠습니다. 저번 글([링크](https://eun-jee.com/post/front-end/debounce_in_React/))에서 Debounce를 구현하며 클로저와 리액트의 재렌더링에 대해 더 깊이있게 이해할 수 있었는데요. 그래서 그런지 이번에 Throttle을 구현할 때는 Debounce를 구현할 때 보다 훨~씬 더 빨리 구현할 수 있었습니다. 수치로 설명드리자면, Debounce는 11개의 파일을 작성하면서 단계적으로 구현했어야 했는데, Throttle은 5개의 파일만으로 최종 코드에 도달할 수 있었습니다!
+
+혹시 Debounce와 Throttle의 개념을 모르신다면 먼저 이 글([링크](https://eun-jee.com/post/front-end/debounce_and_throttle/))을 참고해주세요!
+
+이번 글은 Debounce를 구현했던 글에 이어서 작성하는 것이므로, 이전 글([링크](https://eun-jee.com/post/front-end/debounce_in_React/))을 읽고 오시면 더 이해가 잘 되실 겁니다! (매우 긴 글 주의)
+
+저번 글과 마찬가지로 바닐라 자바스크립트로 Throttle을 먼저 구현해보고, 그 코드를 리액트로 옮겨 구현하는 방식으로 진행해보겠습니다.
+
+먼저 Throttle이 뭔지 잠시 복습해볼까요? Throttle은 이벤트가 연속적으로 발생할 때 ‘일정한 빈도’로 함수를 호출하여 빈도를 제어하는 방식이라고 했습니다.
+
+## 1) Vanilla Javascript로 구현하기
+
+그렇다면 Throttle을 어떻게 구현해야 할까요?
+
+동작하는 기본적인 원리는 아래와 같습니다.
+
+> 이벤트 발생 → 콜백 함수 실행한 뒤 일정 시간 기다리기 → 기다리는 중에는 이벤트가 발생하여도 콜백 함수 실행되지 않음 → 기다림이 끝나면 콜백 함수 실행
+
+여기서 Debounce와 다른 점이 있습니다. Debounce는 반복해서 이전에 발생한 콜백 함수의 실행을 취소해야하기 때문에 타이머 아이디를 저장해놨다가 반복해서 clearTimeout을 수행했지만, Throttle의 경우 이전 콜백 함수 실행으로 부터 일정시간이 지났는지 아닌지만 확인하면 됩니다. ‘일정시간이 지났는지 아닌지’에 대한 값을 Boolean 형식으로 저장하게 됩니다. 이 값을 저장할 변수명은 `isWaiting`이라고 명명하겠습니다.
+
+이런 원리에 기반하여 Throttle의 바닐라 자바스크립트 예제를 두 가지를 살펴보겠습니다. Debounce의 바닐라 스크립트 예제와 마찬가지로 ‘전역 변수에 저장’하는 버전과 ‘클로저를 활용’하는 버전 두 가지가 있습니다. 두 가지 예제가 가지는 차이점은 Debounce에서 설명한 것과 동일하기 때문에 설명을 간략하게 하도록 할게요.
+
+### 첫번째 예제 : 전역 변수로 isWaiting 저장
+
+```html
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Throttle - example 1</title>
+  </head>
+  <style>
+    body {
+      height: 1000vh;
+    }
+  </style>
+  <body>
+    <script>
+      let isWaiting = false; // 전역 변수에 저장
+
+      const throttle = (callback, time) => {
+        if (isWaiting) return; // 기다리는 중이라면 바로 리턴
+
+        isWaiting = true; // 기다림이 끝났을 때 다시 true
+        callback(); // 콜백 함수 실행
+
+        setTimeout(() => {
+          // 일정 시간이 지나면 다시 false
+          isWaiting = false;
+        }, time);
+      };
+
+      const scrollHandler = (e) => {
+        console.log('scroll');
+      };
+
+      window.addEventListener('scroll', () => {
+        throttle(scrollHandler, 500);
+      });
+    </script>
+  </body>
+</html>
+```
+
+여기서 자바스크립트 코드만 살펴보면, isWaiting이 true라면(기다리는 상태일 때)는 바로 return하여 콜백 함수를 실행시키는 로직이 실행되지 않게 하고, isWaiting이 false라면(기다리지 않는 상태, 즉 일정시간이 지났다면) isWaiting을 true로 변경시켜 다시 일정 시간을 기다리게 하고 콜백 함수를 실행시킵니다. 그리고 마지막으로 일정 시간 후 isWaiting을 false로 변경시켜(setTimeout) 일정 시간이 지났음을 표시합니다.
+
+Debounce를 구현하는 글에서도 설명했듯이, 이렇게 전역 변수에 isWaiting 값을 저장하게 되면 변수가 의도치 않게 변경될 가능성이 있고 재사용성이 떨어지는 문제가 있습니다.
+
+### 두번째 예제 : 클로저 활용
+
+방금 위에서 말한 단점은 클로저를 사용하므로써 보완할 수 있습니다. 클로저 안에 isWaiting 값을 저장하면 변수를 외부로부터 보호할 수 있고, 함수가 실행될 때마다 클로저가 생성되므로 재사용성도 높아지는 장점이 있습니다.
+
+```html
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Throttle - example 1</title>
+  </head>
+  <style>
+    body {
+      height: 1000vh;
+    }
+  </style>
+  <body>
+    <script>
+      const throttle = (callback, time) => {
+        let isWaiting = false; // 클로저 내부에 isWaiting 저장
+
+        return (...args) => {
+          // throttle 로직을 처리하는 함수 반환
+          if (isWaiting) return;
+
+          isWaiting = true;
+          callback.apply(this, args);
+
+          setTimeout(() => {
+            isWaiting = false;
+          }, time);
+        };
+      };
+
+      const scrollHandler = (e) => {
+        console.log('scroll');
+      };
+
+      const throttledHandler = throttle(scrollHandler, 500); // throttle이 반환하는 함수
+
+      window.addEventListener('scroll', throttledHandler);
+    </script>
+  </body>
+</html>
+```
+
+isWaiting 변수가 함수 내부로 옮겨졌을 뿐, throttle 함수의 로직은 동일합니다. 다만, throttle은 throttle 로직을 처리하는 함수를 반환하고 있고, 우리는 throttle 함수를 실행시켜 반환된 이 함수를 이벤트 핸들러로 사용합니다.
+
+## 2) React로 구현하기
+
+먼저 React에서 어떤 기본적인 형태를 구현 목표로 삼을지 보겠습니다. 일단 위 예제들과 마찬가지로 우리가 Throttle을 많이 적용하는 사례가 스크롤 이벤트를 핸들링하는 것이기 때문에 무한 스크롤을 스크롤 이벤트로 구현한다고 가정해보겠습니다.
+
+![code.png](/images/post/react/throttle_in_react/code.png)
+
+기본적인 틀은 위와 같고 여기에 Throttle을 적용하여 스크롤 이벤트를 제어해보겠습니다. 물론 실제 무한 스크롤을 구현할 때는 훨씬 더 많은 로직이 필요하겠지만 간단한 형태만 구현했습니다.
+
+Debounce 구현하면서 삽질은 다 겪었기 때문에, 이번에 Throttle을 구현하면서는 삽질을 하지 않고 금방 구현할 수 있었습니다! 그래서 저번 글보다는 길이가 훨씬 짧아질 것 같네요.
+
+### step 1. 바닐라 자바스크립트 예제(클로저) 그대로 옮기기
+
+일단 먼저 위에서 봤던 클로저를 활용한 예제를 그대로 리액트로 옮겨서 구현해보겠습니다.
+
+```jsx
+import { useEffect } from 'react';
+
+function App() {
+  // 스크롤 이벤트 핸들러
+  const onScroll = () => {
+    console.log('스크롤 이벤트');
+    requestSomething();
+  };
+
+  // 스크롤 이벤트에 실행될 콜백 함수
+  const requestSomething = () => {
+    console.log('콜백함수 호출');
+  };
+
+  const throttle = (callback, time) => {
+    let isWaiting = false;
+
+    return (...args) => {
+      if (isWaiting) return;
+
+      callback.apply(this, args);
+      isWaiting = true;
+
+      setTimeout(() => {
+        isWaiting = false;
+      }, time);
+    };
+  };
+
+  const debounceHandler = throttle(onScroll, 500);
+
+  useEffect(() => {
+    window.onbeforeunload = () => {
+      window.scrollTo(0, 0);
+    };
+
+    window.addEventListener('scroll', debounceHandler);
+
+    return () => {
+      window.removeEventListener('scroll', debounceHandler);
+    };
+  }, []);
+
+  return <div style={{ height: '1000vh' }} />;
+}
+
+export default App;
+```
+
+이 코드는 잘 동작할까요? 아주 잘 동작합니다!
+
+Debounce를 구현했을 때는 이 단계에서부터 제대로 작동되지 않았는데요. onChange 이벤트는 매번 실행되되 , Change 이벤트마다 처리되어야하는 로직(API 호출 등)의 빈도는 제어되어야 했기 때문입니다. 그래서 Debounce를 onChange 핸들러에 적용시키는 것이 아니라 콜백 함수(requestSomething)에만 적용했어야 했죠.
+
+하지만 scroll 이벤트는 scroll 이벤트 자체에 Throttle을 적용하면 되기 때문에 그런 문제는 발생하지 않았네요.
+
+### step 2. 커스텀 훅으로 분리하기
+
+그럼 바로 커스텀 훅으로 분리해서 구현해보겠습니다.
+
+```jsx
+import { useEffect, useRef } from 'react';
+
+function useThrottle(callback, time) {
+  const isWaiting = useRef(false); // 렌더링과 관련없는 값은 useRef로 저장
+
+  return (...args) => {
+    if (isWaiting.current) return;
+
+    callback.apply(this, args);
+    isWaiting.current = true;
+
+    setTimeout(() => {
+      isWaiting.current = false;
+    }, time);
+  };
+}
+
+function App() {
+  // 스크롤 이벤트 핸들러
+  const onScroll = () => {
+    console.log('스크롤 이벤트');
+    requestSomething();
+  };
+
+  // 스크롤 이벤트에 실행될 콜백 함수
+  const requestSomething = () => {
+    console.log('콜백함수 호출');
+  };
+
+  const debounceHandler = useThrottle(onScroll, 500);
+
+  useEffect(() => {
+    window.onbeforeunload = () => {
+      window.scrollTo(0, 0);
+    };
+
+    window.addEventListener('scroll', debounceHandler);
+    return () => {
+      window.removeEventListener('scroll', debounceHandler);
+    };
+  }, []);
+
+  return <div style={{ height: '1000vh' }}></div>;
+}
+
+export default App;
+```
+
+그대로 커스텀 훅으로 분리하여 구현해봤습니다. 각 함수에 콘솔을 찍어 어떻게 동작하는지 확인해보면
+
+![screen.gif](/images/post/react/throttle_in_react/screen.gif)
+
+스크롤은 계속 움직이고 있지만, 스크롤 이벤트와 콜백함수의 호출은 일정 주기로 실행되고 있는 것을 볼 수 있습니다.
+
+### 잠깐!
+
+하지만 여기서 의문이 하나 생겼습니다!
+
+현재 구현된 Throttle은 주기의 시작단계에서 콜백함수가 실행되는, 즉 leading 방식으로 구현이 되어있는데요. 만약 무한 스크롤을 구현한다고 했을 때, 스크롤이 맨 아래에 도착했을 때 콜백함수를 실행해야하는데? isWaiting이 true, 즉 아직 일정 시간이 다 지나지 않았을 때 스크롤이 맨 아래에 도착하면 콜백 함수를 실행할 수 없게 됩니다.
+
+time의 값을 2초로 늘려서 실험해보겠습니다.
+
+![screen.gif](/images/post/react/throttle_in_react/screen1.gif)
+
+사진에서 볼 수 있듯이 스크롤이 맨 아래에 왔는데, 2초가 넘게 기다렸는데도 콜백 함수가 호출되지 않았습니다.
+
+아무래도 이 문제를 해결하려면 trailing 방식도 함께 구현하여 마지막에 일정시간이 지나면 마지막 이벤트에 대한 콜백 함수가 실행될 수 있도록 해야겠습니다.
+
+### Lodash의 Throttle 적용하고 코드 보기
+
+제가 생각한 게 맞는지 Lodash의 Throttle을 적용시켜보고 Lodash의 깃헙([링크](https://github.dev/lodash/lodash))에 들어가서 어떻게 구현했는지 코드를 살펴봤습니다.
+
+우선 제가 구현했던 Throttle이 아닌 Lodash의 throttle을 적용하고 어떻게 작동하는지 보겠습니다.
+
+```jsx
+import { useEffect } from 'react';
+import { throttle } from 'lodash';
+
+function App() {
+  // 스크롤 이벤트 핸들러
+  const onScroll = () => {
+    console.log('스크롤 이벤트');
+    requestSomething();
+  };
+
+  // 스크롤 이벤트에 실행될 콜백 함수
+  const requestSomething = () => {
+    console.log('콜백함수 호출');
+  };
+
+  const debounceHandler = throttle(onScroll, 2000); // lodash의 throttle
+
+  useEffect(() => {
+    window.onbeforeunload = () => {
+      window.scrollTo(0, 0);
+    };
+
+    window.addEventListener('scroll', debounceHandler);
+
+    return () => {
+      window.removeEventListener('scroll', debounceHandler);
+    };
+  }, []);
+
+  return <div style={{ height: '1000vh' }} />;
+}
+
+export default App;
+```
+
+lodash의 throttle을 이전에 제가 구현해놓은 곳에 고대로 사용해봤습니다. 스크롤이 맨 아래에 왔을 때 trailing 방식도 함께 작동하는지 확인해보기 위에 이전과 동일하게 2초로 늘려 적용해봤어요.
+
+![screen.gif](/images/post/react/throttle_in_react/screen2.gif)
+
+스크롤이 맨 아래에 왔을 때 2초 뒤에 콜백 함수가 실행되고 있습니다! 역시 제 생각대로 trailing 방식도 함께 구현이 되어 있었네요.
+
+이어서 lodash의 throttle 코드를 보면 생각보다 코드가 굉장히 짧았습니다.
+
+```jsx
+function throttle(func, wait, options) {
+  let leading = true;
+  let trailing = true;
+
+  if (typeof func !== 'function') {
+    throw new TypeError('Expected a function');
+  }
+  if (isObject(options)) {
+    leading = 'leading' in options ? !!options.leading : leading;
+    trailing = 'trailing' in options ? !!options.trailing : trailing;
+  }
+
+  return debounce(func, wait, {
+    leading,
+    trailing,
+    maxWait: wait,
+  });
+}
+```
+
+이 코드에서 제가 주목한 점은 leading, trailing에 대한 설정값을 throttle 함수의 인자로 받고 있는 것이었습니다. 여기서 아이디어를 얻어 위에서 구현했던 코드에 leading, trailing에 대한 옵션을 설정할 수 있도록 구현해봤습니다.
+
+### step 3. trailing 방식 추가하기
+
+사실 Throttle에 trailing 방식을 추가해서 구현하는 것은 debounce 로직을 추가하는 것과 같습니다.
+
+마지막 이벤트에 일정시간이 지나면 콜백 함수가 실행되는 것 즉, 마지막 이벤트에 대해서는 debounce가 적용되는 셈입니다!
+
+정말 간단하게 Debounce의 로직을 Throttle 함수에 추가하여 구현했습니다.
+
+```jsx
+function useThrottle(callback, time) {
+  const isWaiting = useRef(false);
+  const timerId = (useRef < null) | (number > null); // Debounce를 위한 타이머 아이디 저장
+
+  return (...args) => {
+    if (isWaiting.current) return;
+
+    callback.apply(this, args);
+    isWaiting.current = true;
+
+    setTimeout(() => {
+      isWaiting.current = false;
+    }, time);
+
+    // Debounce 로직 추가
+    if (timerId.current) {
+      clearTimeout(timerId.current);
+    }
+    timerId.current = setTimeout(() => {
+      callback.apply(this, args);
+    }, time);
+  };
+}
+```
+
+이제 leading과 trailing 둘 다 모두 작동합니다!
+
+### step 4. leading, trailing 옵션 추가하기 (최종 코드)
+
+여기서 leading과 trailing에 대한 옵션을 useThrottle 훅의 인자로 받아서 사용하도록 구현해보겠습니다.
+
+```jsx
+function useThrottle(callback, time, options?) {
+  let leading = true; // leading, trailing 기본값은 true
+  let trailing = true;
+
+  const isWaiting = useRef < boolean > false;
+  const timerId = (useRef < null) | (number > null);
+
+  if (options) {
+    // options 인자가 있는 경우
+    leading = 'leading' in options ? !!options.leading : leading;
+    trailing = 'trailing' in options ? !!options.trailing : trailing;
+  }
+
+  return (...args) => {
+    if (!isWaiting.current && leading) {
+      // leading 옵션이 true, isWaiting
+      callback.apply(this, args);
+      isWaiting.current = true;
+
+      setTimeout(() => {
+        isWaiting.current = false;
+      }, time);
+    }
+
+    if (trailing) {
+      if (timerId.current) clearTimeout(timerId.current);
+
+      timerId.current = setTimeout(() => {
+        callback.apply(this, args);
+      }, time);
+    }
+  };
+}
+```
+
+첨언하자면 원래 Throttle을 구현했던 기본 코드에서는 waiting.current 값이 true라면 아래코드처럼 바로 return문으로 뒤에 로직을 작동하지 않도록 했는데요.(`if (isWaiting.current) return;`) 조건문을 이렇게 걸면 leading과 trailing이 모두 true일 때 문제가 생깁니다. trailing이 true일 때 수행해야하는 clearTimeout을 실행하지 못하게 되기 때문에 타이머 아이디가 계속 해서 재생성됩니다.
+
+```jsx
+function useThrottle(callback, time, options?) {
+  // ...
+
+  return (...args) => {
+    if (isWaiting.current) return; // 아래에 있는 로직 clearTimeout을 수행하지 못함
+
+    callback.apply(this, args);
+    isWaiting.current = true;
+
+    setTimeout(() => {
+      isWaiting.current = false;
+    }, time);
+
+    // ...
+  };
+}
+```
+
+## 마치며
+
+Debounce와 Throttle 모두 바닐라 자바스크립트 그리고 리액트로 구현을 완료했습니다. 둘 다 프론트엔드 단에서 성능 최적화에 유용한 기법이지만, 각 상황에 맞게 선택해야하며 지연시간을 적절하게 설정하는 것이 중요합니다. (Debounce의 지연 시간이 너무 짧다면 실행빈도가 여전히 많을 것)
+
+도움이 되셨기를 바랍니다.
