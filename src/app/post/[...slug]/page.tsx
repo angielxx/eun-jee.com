@@ -4,6 +4,7 @@ import { notFound } from 'next/navigation';
 import PostHead from '@/components/PostPage/PostHead';
 import Toc from '@/components/PostPage/Toc';
 import { Metadata } from 'next';
+import { Giscus } from '@/components/common/Giscus';
 
 interface PostDetailProps {
   params: {
@@ -62,6 +63,7 @@ export default function PostPage({ params }: { params: { slug: string[] } }) {
         <Toc post={post} />
       </div>
       <MdxComponents code={post.body.code} />
+      <Giscus />
     </article>
   );
 }
