@@ -1,0 +1,807 @@
+---
+title: '국제화를 위한 텍스트 키 관리 자동화하기 (feat. react-i18next, google spreadsheet)'
+description: i18next-scanner와 구글 스프레드 시트를 활용하여 텍스트 키를 수동으로 관리하는 노가다(?)를 자동화해보자.
+date: 2023-12-02
+type: Post
+---
+
+오늘은 실무와 관련해서는 첫번째 글입니다. 텍스트 키를 정리하면서 자동화를 도입했는데, 이를 구현하면서 프로젝트 폴더 구조 때문에 여타 블로그 글에서 본 것과 달리 추가적인 설정이 더 필요했습니다. 그래서 저처럼 추가적인 설정이 더 필요하신 분들께 도움이 되길 바라며, 제 상황과 그를 해결한 방법을 소개해보도록 하겠습니다.
+
+# 도입 배경
+
+한 스타트업에서 인턴으로 근무하고 있는데요. 회사 프로젝트에서 사용하고 있는 텍스트 키를 전체적으로 정리하는 태스크를 받았습니다. 현재 텍스트 키를 관리하고 있는 json파일에는 사용되지 않고 있는 텍스트 키도 많아 사용 중인 텍스트 키만 모아 정리해야 했고, 네임스페이스 구분없이 하나의 json파일에 모아져있었기 때문에 기능별로 json 파일을 분리하는 작업이 필요했습니다.
+
+코드에 사용되고 있는 텍스트 키를 모아 json 파일 및 구글 스프레드 시트로 정리해야 했는데요. 설마 이걸 하나 하나 사용되고 있는지 찾고, 확인하여, json에 넣고, 구글 스프레드 시트에 넣어야하는건가…?라는 의문이 들며 이런 식으로 작업했다간 효율이 전혀 나지 않을 것 같다고 판단했습니다.
+
+아니나 다를까 역시 개발자들은 비효율을 참지 않죠! 바로 텍스트 키 자동화를 검색해보니 이미 많은 분들이 자동화 프로세스를 도입하셨더라구요.
+
+## 자동화, 왜 도입해야 할까?
+
+> 변화에 빠르게 대응하기
+
+우리의 서비스는 가만히 있지 않습니다. 변화하는 시장상황과 유저의 니즈에 맞춰 계속해서 변화하고 발전해나가야하죠. 우리가 관리하고자 하는 텍스트 키도 마찬가지입니다. 서비스가 변모함에 따라 새로운 텍스트 키가 추가되기도 하고 기존 텍스트 키가 수정되기도 하겠죠.
+
+이럴 때 가뜩이나 일정에 시달리는 마당에 텍스트 키를 한 땀 한 땀 추가하거나 변경해야한다면? 개발자에게 이것만큼 고통스러운 것은 또 없을 것입니다. 그리고 이러한 비효율적인 작업을 줄이면 줄일수록 우리는 더 중요한 로직에 우리의 소중한 리소스를 쓸 수 있겠죠!
+
+> 기존 프로세스의 문제점
+
+기존에는 자동화가 도입되어 있지 않아서 일일이 수작업으로 정리해야하는 상황이었습니다.
+
+1. UI를 구현하며 텍스트 키 추가, 수정 사항이 생길 때 구글 스프레드 시트를 직접 수정한다.
+2. 변경사항을 구글 스프레드 시트에 반영한다.
+3. 구글 스프레드 시트에서 번역 작업이 완료되면 json파일에 반영한다.
+
+이렇게 일일이 사람 손으로 하다보면 실수가 발생하기도 쉽고, 소중한 개발자들의 리소스가 낭비되겠죠. (소중한 내 시간…)
+
+# 국제화? 텍스트 키? (react-i18next)
+
+현재 react-i18next를 사용해 다국어 지원을 구현해놓은 방식은 다음과 같습니다.
+
+각 언어에 따른 텍스트 값은 이렇게 json 파일에 저장되어 있습니다. 사내 프로젝트의 경우 `{네임스페이스}.{언어명}.json` 의 이름 규칙으로 json 파일을 생성해둔 상태입니다.
+
+```jsx
+// namespace.en.json
+{
+	"exampleKey" : "example"
+}
+
+// namespace.ko.json
+{
+	"exampleKey" : "예시"
+}
+
+// namespace.ja.json
+{
+	"exampleKey" : "予示"
+}
+```
+
+이를 사용하기 위한 i18next의 설정입니다. resources 내에는 사용할 언어별로, 그리고 언어 내에서는 네임스페이스별로 사용할 json을 정합니다.
+
+```jsx
+import i18n from 'i18next';
+import { initReactI18next } from 'react-i18next';
+import namespaceKo from '...';
+import namespaceEn from '...';
+
+i18n
+  .use(initReactI18next)
+  .use(LanguageDetector)
+  .init({
+    resources: {
+      en: {
+        namespace: exampleEn,
+      },
+      ko: {
+        namespace: exampleKo,
+      },
+      ja: {
+        namespace: exampleJa,
+      },
+    },
+  });
+```
+
+그러면 리액트 코드 내에서 useTranslation이라는 훅을 사용하여 각 네임스페이스 별로 번역을 선택하여(언어의 경우 LanguageDetector가 알아서 감지하여 결정해줍니다.) 사용할 수 있습니다.
+
+```jsx
+// someComponent.tsx
+function someComponent() {
+  const { t } = useTranslation('namespace'); // 네임스페이스 결정
+
+  return (
+    <div>{t('exampleKey')}</div> // 각 언어에 맞게 해당 키와 대응하는 텍스트 값이 화면에 출력된다.
+  );
+}
+```
+
+# 타 블로그 글로 해결할 수 없었던 문제들
+
+문제가 있었습니다. 대부분의 블로그 글에서는 하나의 네임스페이스만 다루고 있었습니다. 사내 프로젝트에서는 폴더구조가 feature별로 나뉘어져있었고, 번역 파일 또한 feature별로 관리하고 있기 때문에 이에 대응할 수 있는 코드가 필요했습니다.
+
+```jsx
+📦src
+┣ 📂common
+┃ ┣ 📂locale // src/common/locale...
+┃ ┃ ┣ 📜i18n.json
+┃ ┃ ┣ 📜settingi18n.ts
+┃ ┃ ┣ 📜translation.en.json
+┃ ┃ ┣ 📜translation.ja.json
+┃ ┃ ┗ 📜translation.ko.json
+┣ 📂features
+┃ ┣ 📂feature1 // src/features/feature1/locale...
+┃ ┃ ┣ 📂components
+┃ ┃ ┣ 📂layout
+┃ ┃ ┣ 📂locale
+┃ ┃ ┃ ┣ 📜feature1.en.json
+┃ ┃ ┃ ┗ 📜feature1.ko.json
+┃ ┣ 📂feature2 // src/features/feature2/locale...
+┃ ┃ ┣ 📂components
+┃ ┃ ┣ 📂layout
+┃ ┃ ┣ 📂locale
+┃ ┃ ┃ ┣ 📜feature2.en.json
+┃ ┃ ┃ ┗ 📜feature2.ko.json
+//...
+```
+
+위 폴더 구조와 같이 각 폴더 별(common, feature1, feature2…)로 코드를 스캔하여 텍스트 키를 긁어오고,, 각 폴더명을 가지고 json 파일을 생성해야 했습니다.
+
+또한 현재 텍스트 키가 중첩된 키 정리해야 했습니다.
+
+예를 들어,
+
+```jsx
+{
+	"key1" : {
+		"key2" : {
+			"key3: "value",
+			//...
+		}
+	}
+}
+```
+
+```jsx
+// someComponent.tsx
+function someComponent() {
+  const { t } = useTranslation();
+
+  return <div>{t('key1.key2.key3')}</div>;
+}
+```
+
+이처럼 key1.key2.key3 이런 식으로 키를 참조하고 있는 값들을 key3만 참조하여 사용할 수 있도록 정리해야했습니다.
+
+### 요구 사항
+
+1. 사용 중인 텍스트 키 스캔하여 정리 : 각 feature 폴더와 common 폴더 별로 해당 폴더 안에서 사용 중인 텍스트 키를 스캔한다.
+2. 폴더 별로 분리하여 번역 파일 생성 : 각 폴더명을 기반으로 json 파일을 생성하여 해당 폴더의 locale 폴더에 넣는다.
+3. 중첩 키를 정리 : 사용 중인 텍스트 키가 모두 정리가 된 상태에서, json파일 그리고 코드를 순회하며 중첩된 키를 정리하여 코드와 json 파일 양쪽에 모두 적용
+
+하지만 다른 블로그 글에서는 이런 방법을 해결할 수 있는 방법에 대해 언급하고 있는 글이 없었습니다. 구현해놓은 스크립트 코드를 단순히 올려놓은 글들이 많았기 때문에 블로그 글 만으로 방법을 찾기는 어려웠습니다.
+
+# 해결방법 : Namespaces
+
+이 상황에서 적용할 수 있는 방법을 찾기 위해 18next의 공식문서를 살펴봤습니다.
+
+[Namespaces](https://www.i18next.com/principles/namespaces)
+
+Namespace는 위에서 설명하면서 잠깐 언급하기도 했는데요. i18next의 공식문서에서 설명하고 있는 Namespace는 아래와 같습니다.
+
+> Namespaces are a feature in i18next internationalization framework which allows you to separate translations that get loaded into multiple files.
+
+> Namespace는 i18 next 국제화 프레임워크의 기능으로 여러 파일로 나누어 번역을 분리할 수 있습니다.
+
+이 네임스페이스를 활용해서 코드 스캔시 폴더명을 가져와 네임스페이스로 지정하고 네임스페이스에 해당하는 폴더에 json 파일을 생성하여 구현했습니다.
+
+## 예시 코드
+
+### i18next에서의 namespaces
+
+namespace를 활용하는 예시로 아래와 같은 설명을 하고 있습니다.
+
+먼저 namespace 별로 번역 파일(json)을 분리하여 작성하는 방법입니다.
+
+```jsx
+common.json -> 여러군데에서 재사용되는 것들, eg. Button labels 'save', 'cancel'
+validation.json -> 모든 유효성 검사 텍스트
+glossary.json -> 텍스트 내에서 일관성 있게 재사용하고자 하는 단어
+```
+
+또한 namespace를 어떤 기준으로 분리하면 좋을지에 대한 예시도 설명하고 있습니다.
+
+- view/page 단위의 namespace
+- application section/feature set 단위의 namespace
+- lazy 로딩되는 모듈 단위의 namespace
+
+i18next의 기본 설정파일에서 namespace에 대한 설정을 아래와 같이 작성할 수 있습니다.
+
+```jsx
+i18next.init(
+  {
+    ns: ['common', 'moduleA', 'moduleB'], // 사용할 네임스페이스
+    defaultNS: 'moduleA', // 기본 네임스페이스
+  },
+  (err, t) => {
+    i18next.t('myKey'); // 기본 네임스페이스인 'moduleA'에서 번역 값을 가져온다.
+    i18next.t('myKey', { ns: 'common' }); // common 네임스페이스에서 번역 값을 가져온다.
+  }
+);
+```
+
+이 네임스페이스를 어떻게 활용할지는 이제 실제로 구현된 코드를 보면서 확인해보도록 하겠습니다.
+
+# 자동화 구현
+
+## 요구사항 및 도구
+
+### 기능
+
+구현한 자동화 기능은 크게 3가지 입니다.
+
+1. 스캔 : 코드에 사용되고 있는 텍스트 키를 스캔하여 폴더 별로 json 파일로 정리
+2. 업로드 : 생성된 json 파일을 구글 스프레드 시트에 업로드
+3. 다운로드 : 구글 스프레드 시트의 내용을 받아 json 파일에 반영
+
+### 사용할 도구
+
+- i18next-scanner : 코드를 스캔하고 번역 키/값을 추출하여 i18n 리소스 파일로 병합하는 라이브러리
+- google-spreadsheet : javascript / typescript용 Google Sheets API 라이브러리
+- fs 모듈 : Node에서 사용하는 파일시스템 모듈 (파일을 읽고 쓰는 작업)
+- path 모듈 : 폴더와 파일의 경로를 조작하는 모듈
+
+### 스크립트
+
+각 기능을 수행하는 스크립트는 아래처럼 package.json에 넣어놓고 사용할 수 있습니다.
+
+```jsx
+// package.json
+{
+		// 코드에 사용 중인 텍스트 키를 스캔하여 json에 반영
+		"scan:i18n": "i18next-scanner --config src/translation/i18next-scanner.config.js",
+		// 구글 스프레드 시트의 내용을 받아 json에 반영
+		"download:i18n": "node src/translation/download.js",
+		// json의 내용을 구글 스프레드 시트에 반영
+		"upload:i18n": "node src/translation/upload.js"
+}
+```
+
+## 사용 중인 텍스트 키 스캔하기 : i18next-scanner
+
+거두절미하고 최종적으로 구현한 코드를 보며 설명해보겠습니다. i18next-scanner 옵션에 대해선 아래 깃헙 공식 레포지토리에서 설명해주고 있습니다. 이를 참고하여 개인 입맛에 맞게 구성하여 사용하면 될 것 같습니다. 제 코드는 참고만 해주세요.
+
+[https://github.com/i18next/i18next-scanner#default-options](https://github.com/i18next/i18next-scanner#default-options)
+
+```jsx
+// src/translation/i18next-scanner.config.js
+const path = require('path');
+
+const COMMON_EXTENSIONS = '/**/*.{js,jsx,ts,tsx,vue,html}';
+
+const translationKo = require('../common/locale/translation.ko.json');
+const translationEn = require('../common/locale/translation.en.json');
+const translationJa = require('../common/locale/translation.ja.json');
+
+const homeKo = require('../features/home/locale/home.ko.json');
+const homeEn = require('../features/home/locale/home.en.json');
+
+const controlKo = require('../features/control/locale/control.ko.json');
+const controlEn = require('../features/control/locale/control.en.json');
+
+// feature 폴더 중 control, home 폴더에서 참조하고 있는 번역 파일
+const featureTrans = {
+  home: {
+    ko: homeKo,
+    en: homeEn,
+  },
+  control: {
+    ko: controlKo,
+    en: controlEn,
+  },
+};
+
+// control, home을 제외하고 모든 곳에서 참조하고 있는 번역 파일
+const commonTrans = {
+  ko: translationKo,
+  en: translationEn,
+  ja: translationJa,
+};
+
+module.exports = {
+  // 스캔할 위치 지정
+  input: [
+    // 포함할 경로
+    `./src/features/${COMMON_EXTENSIONS}`,
+
+    // 제외할 경로
+    `!./src/features/notification/${COMMON_EXTENSIONS}`,
+    `!./src/features/agent/${COMMON_EXTENSIONS}`,
+    `!./src/features/statistics/${COMMON_EXTENSIONS}`,
+  ],
+
+  options: {
+    // default values를 체크할 때 사용할 디폴트 언어
+    defaultLng: 'ko',
+    // 사용하고 있는 언어들
+    lngs: ['ko', 'en'],
+    func: {
+      // 스캔할 대상 함수
+      list: ['t'],
+      // 스캔할 대상 파일들의 확장자
+      extensions: ['.js', '.jsx', '.ts', '.tsx'],
+    },
+
+    resource: {
+      loadPath: 'src/features/{{ns}}/locales/{{ns}}.{{lng}}.json',
+      savePath: 'src/features/{{ns}}/locales/{{ns}}.{{lng}}.json',
+    },
+
+    // 사용할 네임스페이스 목록
+    ns: [
+      'control',
+      'eum',
+      'home',
+      'license',
+      'project',
+      'setting',
+      'signin',
+      'usage',
+      'vwr',
+    ],
+
+    // 값을 지정하는 로직 부분
+    defaultValue(lng, ns, key) {
+      const separator = '.';
+      const [a, b, c, d, e] = key.split(separator); // 중첩 키가 사용된 경우들을 처리하기 위함
+
+      let value;
+
+      // control, home 폴더의 경우 참조해야하는 번역 파일이 달라 분기처리
+      if (['control', 'home'].includes(ns)) {
+        if (c && !d) {
+          value =
+            featureTrans[ns][lng][a] &&
+            featureTrans[ns][lng][a][b] &&
+            featureTrans[ns][lng][a][b][c]
+              ? featureTrans[ns][lng][a][b][c]
+              : commonTrans[lng][a][b][c];
+        } else if (b && !c) {
+          value =
+            featureTrans[ns][lng][a] && featureTrans[ns][lng][a][b]
+              ? featureTrans[ns][lng][a][b]
+              : commonTrans[lng][a][b];
+        } else if (a && !b) {
+          value = featureTrans[ns][lng][a]
+            ? featureTrans[ns][lng][a]
+            : commonTrans[lng][a];
+        }
+      } else {
+        if (e) {
+          value = commonTrans[lng][a][b][c][d][e];
+        } else if (d && !e) {
+          value = commonTrans[lng][a][b][c][d];
+        } else if (c && !d) {
+          value = commonTrans[lng][a][b][c];
+        } else if (b && !c) {
+          value = commonTrans[lng][a][b];
+        } else {
+          value = commonTrans[lng][a];
+        }
+      }
+
+      return value;
+    },
+    keySeparator: false,
+    nsSeparator: false,
+    prefix: '%{',
+    suffix: '}',
+  },
+
+  // 파일이 위치한 폴더 명에 따라 네임스페이스를 지정해주는 로직
+  transform: function customTransform(file, enc, done) {
+    const { parser } = this;
+    // 폴더명 가져오기
+    const featureName = file.path.split(path.sep).slice(-3, -2)[0];
+
+    parser.parseFuncFromString(
+      file.contents.toString(enc),
+      { list: ['t'] },
+      (key, options) => {
+        // 폴더명으로 네임스페이스 전달하기
+        parser.set(key, { ...options, ns: featureName });
+      }
+    );
+
+    done();
+  },
+};
+```
+
+defaultValue 옵션에서 텍스트 키의 값을 지정하는 로직을 작성했고, transform 옵션에서 각 폴더에 따라 네임스페이스를 지정해주는 로직을 작성했습니다.
+
+- defaultValue : `parser.set`에 값이 전달되지 않는다면 기본적으로 사용될 값을 지정하는 옵션
+- transform : 스캔되는 파일들을 커스텀하여 처리할 수 있는 함수를 지정하는 옵션, 스캐너가 코드를 읽고 해석하는 방법을 조작하여 번역 키를 추출할 수 있다.
+
+블로그 글을 쓰면서 다시 보니 모든 로직을 tranform 옵션에서 사용해도 될 것 같다는 생각이 드네요.
+
+## 구글 스프레드 시트 연동하기
+
+이제 코드 단에서 사용 중인 텍스트 키를 모두 정리했으니 정리된 json 파일의 내용을 구글 스프레드 시트에 올릴 차례입니다.
+
+앞서 말씀드린 것처럼 각 feature별로 json 번역 파일을 관리하고 있기 때문에, 구글 스프레드 시트의 경우에도 각 네임스페이스마다 시트를 작성해야 했습니다.
+
+이를 위해 미리 네임스페이스 별로 시트를 만들어놓고, 각 네임스페이스 별 시트의 sheetId를 가지고 각 번역 파일을 업로드하고 다운로드할 수 있게 코드를 작성했습니다.
+
+### 구글 스프레드 시트 API를 사용하기 위한 설정
+
+기본적으로 구글 API를 사용하기 위해선 Google Cloud Platform에서 API 설정을 해야하는데요. 이 설정방법에 대해서 잘 설명하고 있는 블로그 글이 많으니 아래 글 참고해서 비공개 키 JSON을 받으면 기본적인 설정은 끝닙니다!
+
+[https://sojinhwan0207.tistory.com/200](https://sojinhwan0207.tistory.com/200)
+
+해당 키를 통해 구글 스프레드 시트 API 사용할 때 인증을 해야합니다.
+
+### 기본 설정 파일 : index.js
+
+upload.js, download.js에서 모두 사용해야하는 값이나 로직은 index.js에 작성하여 공통으로 사용했습니다.
+
+```jsx
+// src/translation/index.js
+const fs = require('fs');
+const path = require('path');
+const { GoogleSpreadsheet } = require('google-spreadsheet');
+const { JWT } = require('google-auth-library'); // 구글 인증 라이브러리
+
+// Google Cloud Platform에서 받은 키 파일의 위치
+const creds = require('./.credentials/~.json');
+
+// 스프레드 시트 아이디
+const spreadsheetDocId = '...';
+const ns = [
+  'control',
+  'eum',
+  'home',
+  'license',
+  'project',
+  'setting',
+  'signin',
+  'usage',
+  'vwr',
+  'common',
+  'agent',
+  'statistics',
+];
+const lngs = ['en', 'ko', 'ja'];
+
+// 스캔 혹은 다운받을 경로를 위한 값들
+const srcPath = './src';
+const featuresPath = path.join(srcPath, 'features');
+const commonPath = path.join(srcPath, 'common');
+
+// 각 네임스페이스 별 시트 아이디
+const sheetIdForNamespaces = {
+  agent: 0,
+  control: 1417978718,
+  eum: 1133616245,
+  home: 1089626816,
+  license: 979596039,
+  notification: 1130312388,
+  project: 1297171255,
+  setting: 2072120756,
+  signin: 1666983927,
+  statistics: 1713887317,
+  usage: 1701897416,
+  vwr: 265110534,
+  plan: 459633795,
+  common: 1476533780,
+};
+
+// 번역 파일(json)이 위치하게 모든 경로를 미리 불러와 반복문을 돌려 사용할 예정
+const localePathForNamespaces = getAllLocalePaths();
+
+// 구글 API 인증
+const serviceAccountAuth = new JWT({
+  email: creds.client_email,
+  key: creds.private_key,
+  scopes: ['https://www.googleapis.com/auth/spreadsheets'],
+});
+
+async function loadSpreadsheet() {
+  console.info(
+    '\u001B[32m',
+    '=====================================================================================================================\n',
+    '# i18next auto-sync using Spreadsheet\n\n',
+    '  * Download translation resources from Spreadsheet and make /src/locales//.json\n',
+    '  * Upload translation resources to Spreadsheet.\n\n',
+    `The Spreadsheet for translation is here (\u001B[34mhttps://docs.google.com/spreadsheets/d/${spreadsheetDocId}/#gid=0\u001B[0m)\n`,
+    '=====================================================================================================================',
+    '\u001B[0m'
+  );
+
+  const doc = new GoogleSpreadsheet(spreadsheetDocId, serviceAccountAuth);
+
+  await doc.loadInfo();
+
+  return doc;
+}
+
+function getAllLocalePaths() {
+  const localePathForNamespaces = {};
+
+  localePathForNamespaces.common = path.join(commonPath, 'locale');
+
+  const features = fs
+    .readdirSync(featuresPath, { withFileTypes: true })
+    .filter((dirent) => dirent.isDirectory())
+    .map((dirent) => dirent.name);
+
+  features.forEach((featureDir) => {
+    const localePath = path.join(featuresPath, featureDir, 'locale');
+    const fearueName = featureDir.split('/')[0];
+    if (fs.existsSync(localePath) && fs.lstatSync(localePath).isDirectory()) {
+      localePathForNamespaces[`${fearueName}`] = localePath;
+    }
+  });
+
+  return localePathForNamespaces;
+}
+
+module.exports = {
+  loadSpreadsheet,
+  getAllLocalePaths,
+  localePathForNamespaces,
+  sheetIdForNamespaces,
+  ns,
+  lngs,
+  columnKeyToHeader,
+};
+```
+
+### json 파일 구글 스프레드 시트에 업로드하기 : upload.js
+
+내장 모듈인 fs, path를 사용한 스크립트 코드이니, 작성된 코드를 천천히 읽어보시면 크게 어렵지 않게 이해하실 수 있을 것입니다. 개인 프로젝트의 상황에 맞게 코드를 작성하면 되며, 구글 스프레드 시트를 어떻게 조작할지는 공식 문서를 확인하며 작성했습니다.
+
+[https://github.com/theoephraim/node-google-spreadsheet](https://github.com/theoephraim/node-google-spreadsheet)
+
+저 같은 경우 참고했던 블로그의 코드와 다르게 google-spreadsheet의 메서드가 업데이트되어 공식문서를 참고해야 했습니다. 꼭 공식문서를 보는 걸 추천합니다!
+
+```jsx
+// src/translation/upload.js
+const fs = require('fs');
+const path = require('path');
+const {
+  lngs,
+  loadSpreadsheet,
+  ns,
+  localePathForNamespaces,
+  sheetIdForNamespaces,
+  headerValues,
+} = require('./index');
+
+// sheet가 없는 경우 sheet를 추가하는 함수
+async function addNewSheet(doc, title, sheetId) {
+  const sheet = await doc.addSheet({
+    sheetId,
+    title,
+    headerValues,
+  });
+
+  return sheet;
+}
+
+// json의 내용을 google-spreadsheet가 전달받아야하는 데이터에 맞게 변환하는 함수
+function getRowsFromJson(object) {
+  const rowsFromJson = {}; // [key] : {key: string, ko: string, en:string }
+
+  for (const [lng, obj] of Object.entries(object)) {
+    for (const [key, val] of Object.entries(obj)) {
+      rowsFromJson[key] = rowsFromJson[key]
+        ? { ...rowsFromJson[key], [lng]: val }
+        : { key: key, [lng]: val };
+    }
+  }
+
+  return rowsFromJson;
+}
+
+// json의 key가 시트에 존재하는지 확인하는 함수
+function isExistInSheet(rows, key) {
+  let answer;
+  for (const row of rows) {
+    if (row.get('key') === key) return true;
+  }
+  return answer;
+}
+
+// 시트 상에서 어떤 key의 행 번호를 찾는 함수
+function getIdxOfKey(rows, key) {
+  for (let i = 0; i < rows.length; i++) {
+    const row = rows[i];
+    if (row.get('key') === key) return i;
+  }
+}
+
+// json의 내용을 반영하여 시트의 데이터를 업데이트하는 함수
+async function updateSheetFromJson(doc, object, sheetId) {
+  const rowsFromJson = Object.values(getRowsFromJson(object)); // [ {key: string, ko: string, en:string }, ... ]
+
+  let sheet = doc.sheetsById[sheetId];
+
+  if (!sheet) {
+    sheet = await addNewSheet(doc, title, sheetId);
+  }
+
+  const rows = await sheet.getRows();
+
+  for (const rowFromJson of rowsFromJson) {
+    const key = rowFromJson.key;
+
+    if (isExistInSheet(rows, key)) {
+      const idx = getIdxOfKey(rows, key);
+      rows[idx].assign(rowFromJson);
+      await rows[idx].save();
+    } else {
+      await sheet.addRow(rowFromJson);
+    }
+  }
+}
+
+// 각 네임스페이스의 json파일의 경로를 받아 json 파일을 읽어오는 함수
+function getJsonFilesForEachNamespace(localePath) {
+  const localeJsons = {};
+
+  const localefiles = fs.readdirSync(localePath);
+  for (const localefile of localefiles) {
+    if (!ns.includes(localefile.split('.')[0])) continue;
+
+    const [namespace, lng] = localefile.split('.');
+
+    const localeFilePath = path.join(localePath, localefile);
+    const fileContents = fs.readFileSync(localeFilePath, 'utf8');
+    const json = JSON.parse(fileContents);
+
+    localeJsons[lng] = json;
+  }
+
+  return localeJsons;
+}
+
+// 모든 lng의 json 내용을 모아 하나의 객체로 만드는 함수
+async function getRowsForNamespaceFromJson(localePath) {
+  /**
+   * lngMap = { [lng] : { key : value }, ... }
+   */
+  const lngMap = new Map();
+  lngs.forEach((lng) => lngMap.set(lng, {}));
+
+  const jsons = getJsonFilesForEachNamespace(localePath);
+
+  for (const [lng, json] of Object.entries(jsons)) {
+    for (const [key, val] of Object.entries(json)) {
+      lngMap.get(lng)[key] = val;
+    }
+  }
+
+  return lngMap;
+}
+
+async function main() {
+  const doc = await loadSpreadsheet();
+
+  // 각 네임스페이스 별로 파일을 읽고 시트를 업데이트하는 로직을 반복 수행
+  for (const [namespace, localePath] of Object.entries(
+    localePathForNamespaces
+  )) {
+    if (namespace === 'plan') continue;
+
+    console.log('namespace :', namespace);
+    console.log('localePath :', localePath);
+
+    const sheetId = sheetIdForNamespaces[namespace];
+    const lngMap = await getRowsForNamespaceFromJson(localePath);
+    const object = Object.fromEntries(lngMap);
+
+    await updateSheetFromJson(doc, object, sheetId);
+
+    console.log('done!');
+    console.log();
+  }
+}
+
+main();
+```
+
+### 구글 스프레드 시트의 내용 json 파일로 다운로드받기 : download.js
+
+download 로직 또한 upload와 비슷합니다. upload에서 했던 과정을 거꾸로 하는 것이나 마찬가지이기 때문에 이 또한 개인의 상황에 맞게 작성하시는 것을 추천드립니다. upload 로직을 완성했다면 download는 금방 쉽게 작성하실 수 있을겁니다!
+
+```jsx
+// src/translation/download.js
+const fs = require('fs');
+const path = require('path');
+const {
+  lngs,
+  loadSpreadsheet,
+  ns,
+  localePathForNamespaces,
+  sheetIdForNamespaces,
+} = require('./index');
+
+// 각 네임스페이스의 json파일의 경로를 받아 json 파일을 읽어오는 함수
+function getJsonFilesForEachNamespace(localePath) {
+  const localeJsons = {};
+
+  const localefiles = fs.readdirSync(localePath);
+
+  for (const localefile of localefiles) {
+    if (!ns.includes(localefile.split('.')[0])) continue;
+
+    const [namespace, lng] = localefile.split('.');
+
+    const localeFilePath = path.join(localePath, localefile);
+    const fileContents = fs.readFileSync(localeFilePath, 'utf8');
+    const json = JSON.parse(fileContents);
+
+    localeJsons[lng] = json;
+  }
+
+  return localeJsons;
+}
+
+// 각 번역 파일 경로에 json 파일을 다시 쓰는 함수
+async function rewriteJsonToLocalPath(object, localePath, namespace) {
+  lngs.forEach((lng) => {
+    const localeFilePath = path.join(localePath, `${namespace}.${lng}.json`);
+    const jsonString = JSON.stringify(object[lng], null, 2);
+
+    fs.writeFileSync(localeFilePath, jsonString, 'utf8', (err) => {
+      if (err) throw err;
+    });
+  });
+}
+
+// 각 네임스페이스의 구글 스프레드 시트로부터 하나의 객체를 만드는 함수
+async function getLngMapForNamespaceFromSheet(doc, sheetId, localePath) {
+  /**
+   * lngMap = { [lng] : { key : value }, ... }
+   */
+  const lngMap = new Map();
+  lngs.forEach((lng) => lngMap.set(lng, {}));
+
+  const jsons = getJsonFilesForEachNamespace(localePath);
+
+  const sheet = doc.sheetsById[sheetId];
+  if (!sheet) return {};
+
+  const rows = await sheet.getRows();
+
+  rows.forEach((row) => {
+    const key = row.get('key');
+
+    lngs.forEach((lng) => {
+      let value = row.get(`${lng}`);
+      if (value) value = value.replace(/\\n/g, '\n');
+      lngMap.set(lng, { ...lngMap.get(lng), [key]: value || '' });
+    });
+  });
+
+  for (const [lng, json] of Object.entries(jsons)) {
+    for (const [key, val] of Object.entries(json)) {
+      lngMap.get(lng)[key] = lngMap.get(lng)[key] || val;
+    }
+  }
+
+  return lngMap;
+}
+
+async function main() {
+  const doc = await loadSpreadsheet();
+
+  // 각 네임스페이스 별로 시트를 읽고 파일을 쓰는 로직을 반복 수행
+  for (const [namespace, sheetId] of Object.entries(sheetIdForNamespaces)) {
+    if (namespace === 'plan') continue;
+
+    console.log('namespace :', namespace);
+
+    const localePath = localePathForNamespaces[namespace];
+    const lngMap = await getLngMapForNamespaceFromSheet(
+      doc,
+      sheetId,
+      localePath
+    );
+    const object = Object.fromEntries(lngMap);
+
+    await rewriteJsonToLocalPath(object, localePath, namespace);
+
+    console.log('done!');
+    console.log();
+  }
+}
+
+main();
+```
+
+# 마치며
+
+스캔의 경우 각 폴더 별로 1초도 걸리지 않는 빠른 속도로 굉장한 효율을 낼 수 있었습니다. 실무를 하면서 대량의 코드를 작성하고 관리하다 보면 스크립트를 작성할 일이 또 있을 것 같은데, 이번에 fs와 path 모듈을 사용해볼 수 있던 기회였습니다.
+
+이렇게 빠른 효율을 낼 수 있는 코드의 힘을 느낄 수 있었고, 어떤 태스크를 대하더라도 항상 고효율을 낼 수 있도록 도구들을 잘 사용해야겠다는 생각이 들었습니다. 효율적으로 일하자!
