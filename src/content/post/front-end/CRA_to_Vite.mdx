@@ -1,0 +1,396 @@
+---
+title: 'CRA에서 Vite로 마이그레이션하기 (feat. 배포 시간 줄이기)'
+description: 'CRA에서 Vite로 마이그레이션 하게 된 계기와 과정'
+date: 2024-03-03
+type: Post
+---
+
+# 시작하며.
+
+오늘은 회사 프론트엔드 앱의 번들러를 기존 CRA에서 Vite로 마이그레이션 한 방법에 대해 서술해보려 합니다. 저희 회사는 CI/CD 툴이 굉장히 잘 되어 있는데요. 프론트엔드 앱과 백엔드 앱 모두를 패키징하여 빌드하는 과정에서 프론트엔드 앱만 빌드 시간이 서버 앱보다 거의 2배 이상 걸려 전체 빌드 시간에 악영향을 미치고 있었습니다.
+
+빌드를 기다리면서 답답함과 불편함을 겪었고, 개선할 방법을 고민하게 되었습니다. 개인 프로젝트를 할 때 번들러로 Vite를 애용하는데요. 엄청난 빌드 속도를 자랑하는 Vite를 회사 프로젝트에도 적용시켜야겠다는 결심에 다다랐습니다.
+
+# Vite?
+
+### 빠른 빌드 시간
+
+- Rollup을 기반으로 최적화된 빌드를 제공하여 Webpack에 비해 Vite가 빌드 속도면에서 우수한 성능
+
+### 개발 서버 구동 시간 단축 및 핫 모듈 리로드 속도 향상
+
+- Vite는 개발 모드에서 ES 모듈을 활용하여 브라우저가 직접 모듈을 해석하고 캐싱할 수 있게 함으로써 초기 로딩 시간과 핫 모듈 리로딩(HMR) 속도를 크게 개선
+- Vite는 변경된 모듈만을 대상으로 리로드하기 때문에 변경되는 UI가 실시간으로 반영
+
+# CRA에서 Vite로 마이그레이션
+
+### 1) Vite 등 필요한 의존성 설치
+
+```
+yarn add -D vite @vitejs/plugin-react vite-tsconfig-paths @svgr/rollup
+```
+
+- @vitejs/plugin-react : @vitejs/plugin-react는 Vite에서 React를 사용할 때 필요한 구성을 추가하여 React 애플리케이션의 빠른 개발 및 번들링을 지원
+- vite-tsconfig-paths : tsconfig.json 파일에 설정된 경로 별칭을 Vite에서도 적용할 수 있도록 지원. vite-tsconfig-paths를 사용하면 TypeScript 설정에 정의된 경로 별칭이 Vite에서도 인식되어 모듈 경로를 해석할 때 사용 가능
+- @svgr/rollup : SVGR을 Rollup 번들러에서 사용할 수 있도록 지원. SVGR은 SVG 파일을 React 컴포넌트로 변환하여, JSX로 SVG를 쉽게 조작하고 스타일링. @svgr/rollup은 Rollup의 플러그인으로서 SVGR을 프로젝트에 통합하여 SVG 파일을 React 컴포넌트로 자동으로 변환할 수 있도록 지원
+
+### 2) vite.config.ts 생성
+
+```
+import react from '@vitejs/plugin-react';
+import tsconfigPaths from 'vite-tsconfig-paths';
+import { defineConfig } from 'vite';
+import svgr from '@svgr/rollup';
+
+export default defineConfig({
+	plugins: [react(), tsconfigPaths(), svgr()],
+	server: {
+		port: 3000, // 서버 포트 번호 변경
+	},
+	define: {
+		global: '{}',  // 글로벌 객체를 빈 객체로 대체
+	},
+	build: {
+		outDir: 'build', // build 폴더명 변경
+		assetsDir: 'static', // build 폴더 내 assets 폴더명 변경
+	},
+});
+```
+
+- **port 설정**
+  - Vite 프로젝트는 기본 포트가 5173이므로 기존 개발 환경에 맞게 포트 번호 수정
+- **define: { global: '{}' }**
+  - Node.js 환경에서 사용되는 global 객체를 웹 환경에서도 사용할 수 있도록 하여 호환성을 보장하고, 라이브러리나 모듈의 원활한 사용을 지원하기 위한 것
+- **build 폴더 관련 설정**
+  - VIte 프로젝트는 기본 빌드 폴더명이 ‘dist’이므로 기존 개발 환경에 맞게 빌드 폴더명을 ‘build’로 변경
+  - Vite 프로젝트는 빌드된 정적 파일을 기본적으로 dist/assets 폴더 내에 저장하지만, 기존 개발 환경에서는(사스는 폴더명 상관없음) 빌드된 파일을 서빙하는 폴더가 ‘static’이므로 이에 맞게 폴더명을 수정
+  - 프로젝트에 따라 상이하므로 참고
+
+### 3) index.html 수정
+
+- 참고 : [https://ko.vitejs.dev/guide/#index-html-and-project-root](https://ko.vitejs.dev/guide/#index-html-and-project-root)
+
+(추가적인 번들링 과정 없이 index.html 파일이 애플리케이션의 진입점(entry point)이 되게 하기 위함)
+
+- index.html의 위치 수정
+  - public에서 프로젝트 루트 폴더로 이동
+- index.html 내의 %PUBLIC_URL% 제거
+  - `<link rel="icon" href="/favicon.ico" />`
+- index.html의 body 부분 업데이트
+  - `<body> <div id="root"></div> <script type="module" src="/src/index.tsx"></script>
+    </body>`
+
+### 4) tsconfig.json 수정
+
+```
+{
+  "compilerOptions": {
+    "types": ["vite/client" "react", "react-dom", "node"], // 추가
+    "isolatedModules": true, // 추가
+	...
+
+  },
+  "include": ["vite.config.ts", ...] // 추가
+}
+```
+
+### 5) 환경변수 수정
+
+- 참고 : [https://ko.vitejs.dev/guide/env-and-mode.html](https://ko.vitejs.dev/guide/env-and-mode.html)
+
+**중요 변경 사항**
+
+- 환경변수명 변경 : 기존에 사용하던 환경변수 REACT*APP*{variable name}에서 VITE\_{variable name}으로 변경됨
+- 환경변수 호출방식 변경 : 기존 process.env.REACT*APP*{variable name}에서 import.meta.VITE\_{variable name} 으로 변경
+- 환경변수 파일명 변경 : 각 모드 (dev, staging, prod, sysopdev, adminopdev 등)에 따라 사용하는 .env 파일명은 .env.[mode]로 통일한다.
+  - 예시
+    - dev → .env.local
+    - staging → .env.staging
+    - prod → .env.prod
+    - sysopdev → .env.sysopdev (기존 .env.sysadmin.onprem.dev에서 변경)
+    - adminopdev → .env.adminopdev(기존 .env.admin.onprem.dev에서 변경)
+  - 프로젝트마다 다를 수 있음
+
+위 내용에 따라 CI 과정에서 환경변수를 주입하는 로직을 수정해줘야 한다.
+
+### 6) 절대 경로 설정 수정
+
+> vite-tsconfig-paths를 사용하면 tsconfig.json의 절대 경로 설정이 vite에 적용된다.
+
+**AS-IS**
+
+기존에 아래와 같이 사용되던 절대경로를 그대로 사용할 수 있도록 함
+
+```
+// tsconfig.json
+{
+    //....
+    "baseUrl": "src",
+}
+```
+
+```
+// 절대 경로 사용 예시
+import { isOnprem } from 'common/utils/envConst';
+import { paletteSDS, themeSDS } from 'design';
+import ManagementGuide from 'features/control/components/ManagementGuide';
+```
+
+**TO-BE**
+
+```
+// tsconfig.json
+{
+    //...
+    "baseUrl": "src",
+    "paths": {
+			"*": ["*"], // 모든 경로를 src/ 아래로 해석하도록 설정합니다.
+			"common/*": ["common/*"],
+			"design/*": ["design/*"],
+			"features/*": ["features/*"],
+			"pages/*": ["pages/*"],
+			"routes/*": ["routes/*"],
+			"translation/*": ["translation/*"]
+    },
+}
+```
+
+### 7) package.json 스크립트 수정
+
+> react-scripts가 아닌 vite를 사용하여 스크립트를 실행
+
+**AS-IS**
+
+```
+{
+    //...
+	"start:dev": "env-cmd -f .env.dev react-scripts start",
+	"start:qa": "env-cmd -f .env.qa react-scripts start",
+	"start:staging": "env-cmd -f .env.staging react-scripts start",
+	"start:prod": "env-cmd -f .env.prod react-scripts start",
+	"start:opdev": "env-cmd -f .env.onprem.dev react-scripts start",
+	"start:local": "HTTPS=true SSL_CRT_FILE=_wildcard.stclab.com+2.pem SSL_KEY_FILE=_wildcard.stclab.com+2-key.pem HOST=0.0.0.0 env-cmd -f .env.local react-scripts start",
+	"build": "env-cmd -f .env react-scripts build",
+	"build:dev": "env-cmd -f .env.dev react-scripts build",
+	"build:qa": "env-cmd -f .env.qa react-scripts build",
+	"build:staging": "env-cmd -f .env.staging react-scripts build",
+	"build:prod": "GENERATE_SOURCEMAP=false env-cmd -f .env.prod react-scripts build",
+	"build:opdev": "env-cmd -f .env.onprem.dev react-scripts build",
+}
+```
+
+**TO-BE**
+
+```
+{
+    //...
+    "start:dev": "vite --mode dev",
+    "start:qa": "vite --mode qa",
+    "start:staging": "vite --mode staging",
+    "start:prod": "vite --mode prod",
+    "start:opdev": "vite --mode onprem",
+    "start:local": "vite",
+    "build": "tsc && vite build",
+    "build:dev": "tsc && vite build --mode dev",
+    "build:qa": "tsc && vite build --mode qa",
+    "build:staging": "tsc && vite build --mode staging",
+    "build:prod": "tsc && vite build --mode prod",
+    "build:opdev": "tsc && vite build --mode onprem",
+}
+```
+
+- 각 스크립트에 표시된 모드에 맞는 환경변수 파일을 사용한다. 그러므로 이에 따라 환경변수 파일명을 CI 스크립트에서 수정해야 한다.
+
+### 8) CI 관련 스크립트 수정
+
+> 생성되는 환경 변수 파일명 수정
+
+**AS-IS**
+
+```
+// build-project.sh
+
+FILE_LIST=(
+  "conf/db_password.txt"
+  "conf/nginx.conf"
+  "conf/nginx.crt"
+  "conf/nginx.key"
+  "apps/console/.env.onprem.dev"
+  "apps/admin/.env.onprem.admin.dev"
+  "apps/sysadmin/.env.onprem.sysadmin.dev"
+)
+```
+
+**TO-BE**
+
+```
+// build-project.sh
+
+FILE_LIST=(
+  "conf/db_password.txt"
+  "conf/nginx.conf"
+  "conf/nginx.crt"
+  "conf/nginx.key"
+  "apps/console/.env.onprem" // 각 모드명에 맞게 파일명 수정
+  "apps/admin/.env.adminopdev" // 각 모드명에 맞게 파일명 수정
+  "apps/sysadmin/.env.sysopdev" // 각 모드명에 맞게 파일명 수정
+)
+```
+
+> 주입되는 환경 변수명 수정
+
+**AS-IS**
+
+```
+// build-fe-app.yml
+
+# Permission can be added at job level or workflow level
+permissions:
+  id-token: write # This is required for requesting the JWT
+  contents: read # This is required for actions/checkout
+  actions: read # This is required for slack
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    env:
+      CONSOLE_REACT_APP_BASE_URL: ...
+      CONSOLE_REACT_APP_RELEASE_ENV: ...
+      CONSOLE_REACT_APP_PRODUCT_MODE: ...
+      CONSOLE_REACT_APP_AGENT_URL: ...
+      CONSOLE_REACT_APP_SCP_CONSOLE_URL: ...
+```
+
+```
+// build-and-deploy-saas-fe-app.yml
+
+  build-and-push:
+    uses: ./.github/workflows/build-fe-app.yml
+    needs: [set-image-tag]
+    if: ${{ needs.set-image-tag.outputs.env != '' }}
+    with:
+      AWS_REGION: ap-northeast-2
+      ECR_REPO_URL: 863067839821.dkr.ecr.ap-northeast-2.amazonaws.com
+      ROLE_ARN: arn:aws:iam::863067839821:role/assume-role-surffy-dev
+      ECR_REPO_NAME: fe-app
+      IMAGE_TAG: ${{ needs.set-image-tag.outputs.image-tag }}
+      FE_APP_ENV: |
+        {
+          "REACT_APP_BASE_URL": ...
+          "REACT_APP_RELEASE_ENV": ...
+          "REACT_APP_PRODUCT_MODE": ...
+          "REACT_APP_AGENT_URL": ...
+          "REACT_APP_SCP_CONSOLE_URL": ...
+        }
+```
+
+**TO-BE**
+
+```
+// build-fe-app.yml
+
+# Permission can be added at job level or workflow level
+permissions:
+  id-token: write # This is required for requesting the JWT
+  contents: read # This is required for actions/checkout
+  actions: read # This is required for slack
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    env:
+      CONSOLE_VITE_BASE_URL: ...
+      CONSOLE_VITE_RELEASE_ENV: ...
+      CONSOLE_VITE_PRODUCT_MODE: ...
+      CONSOLE_VITE_AGENT_URL: ...
+      CONSOLE_VITE_SCP_CONSOLE_URL: ...
+```
+
+```
+// build-and-deploy-saas-fe-app.yml
+
+  build-and-push:
+    uses: ./.github/workflows/build-fe-app.yml
+    needs: [set-image-tag]
+    if: ${{ needs.set-image-tag.outputs.env != '' }}
+    with:
+      AWS_REGION: ap-northeast-2
+      ECR_REPO_URL: 863067839821.dkr.ecr.ap-northeast-2.amazonaws.com
+      ROLE_ARN: arn:aws:iam::863067839821:role/assume-role-surffy-dev
+      ECR_REPO_NAME: fe-app
+      IMAGE_TAG: ${{ needs.set-image-tag.outputs.image-tag }}
+      FE_APP_ENV: |
+        {
+          "VITE_BASE_URL": ...
+          "VITE_RELEASE_ENV": ...
+          "VITE_PRODUCT_MODE": ...
+          "VITE_AGENT_URL": ...
+          "VITE_SCP_CONSOLE_URL": ...
+```
+
+- REACT_APP 프리픽스를 모두 VITE로 수정
+
+### 9) 사용하지 않는 종속성 제거
+
+Vite와는 관련없지만 CI 속도를 향상시키기 위해 추가한 과정입니다.
+
+```
+npx depcheck
+```
+
+위 명령어를 사용하여 사용하지 않는 패키지를 검열하고 삭제함
+
+### 명령어 실행 결과 예시
+
+```
+Unused dependencies
+* @testing-library/jest-dom
+* @testing-library/react
+* @testing-library/user-event
+* amazon-cognito-identity-js
+* buffer
+* html2canvas
+* jspdf
+* qs
+* react-google-recaptcha-v3
+* react-hook-form
+* styled-components
+* web-vitals
+Unused devDependencies
+* @babel/plugin-proposal-private-property-in-object
+* @storybook/addon-actions
+* @storybook/addon-essentials
+* @storybook/addon-interactions
+* @storybook/addon-links
+* @storybook/addon-mdx-gfm
+* @storybook/node-logger
+* @storybook/preset-create-react-app
+* @storybook/react
+* @storybook/react-webpack5
+* @storybook/testing-library
+* @tanstack/eslint-plugin-query
+* @types/jest
+* @types/react-google-recaptcha
+* @types/styled-components
+* vite-plugin-svgr
+Missing dependencies
+* eslint-plugin-react: ./.eslintrc
+* eslint-plugin-jsx-a11y: ./.eslintrc
+* eslint-plugin-react-hooks: ./.eslintrc
+* eslint-config-react-app: ./package.json
+* design: ./src/App.tsx
+* common: ./src/App.tsx
+* routes: ./src/App.tsx
+* google-spreadsheet: ./src/translation/getJaTranslations.js
+* features: ./src/routes/CommonRoute.tsx
+* pages: ./src/routes/CommonRoute.tsx
+```
+
+- unused deps, unused devdeps에 해당하는 패키지를 삭제함
+
+# 마이그레이션 결과
+
+- 전 : 8분 ~ 10분
+- 후 : 3~4분
+
+> 약 61.11% 감소
