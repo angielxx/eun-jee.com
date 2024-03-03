@@ -47,6 +47,9 @@ export default defineConfig({
 	server: {
 		port: 3000, // 서버 포트 번호 변경
 	},
+	define: {
+		global: '{}',  // 글로벌 객체를 빈 객체로 대체
+	},
 	build: {
 		outDir: 'build', // build 폴더명 변경
 		assetsDir: 'static', // build 폴더 내 assets 폴더명 변경
@@ -54,11 +57,11 @@ export default defineConfig({
 });
 ```
 
-- **port 설정**
+- port 설정
   - Vite 프로젝트는 기본 포트가 5173이므로 기존 개발 환경에 맞게 포트 번호 수정
-- **define: { global: '{}' }**
+- define: { global: '{}' }
   - Node.js 환경에서 사용되는 global 객체를 웹 환경에서도 사용할 수 있도록 하여 호환성을 보장하고, 라이브러리나 모듈의 원활한 사용을 지원하기 위한 것
-- **build 폴더 관련 설정**
+- build 폴더 관련 설정
   - VIte 프로젝트는 기본 빌드 폴더명이 ‘dist’이므로 기존 개발 환경에 맞게 빌드 폴더명을 ‘build’로 변경
   - Vite 프로젝트는 빌드된 정적 파일을 기본적으로 dist/assets 폴더 내에 저장하지만, 기존 개발 환경에서는(사스는 폴더명 상관없음) 빌드된 파일을 서빙하는 폴더가 ‘static’이므로 이에 맞게 폴더명을 수정
   - 프로젝트에 따라 상이하므로 참고
