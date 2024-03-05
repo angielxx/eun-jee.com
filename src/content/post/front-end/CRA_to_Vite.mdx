@@ -270,8 +270,6 @@ jobs:
     if: ${{ needs.set-image-tag.outputs.env != '' }}
     with:
       AWS_REGION: ap-northeast-2
-      ECR_REPO_URL: 863067839821.dkr.ecr.ap-northeast-2.amazonaws.com
-      ROLE_ARN: arn:aws:iam::863067839821:role/assume-role-surffy-dev
       ECR_REPO_NAME: fe-app
       IMAGE_TAG: ${{ needs.set-image-tag.outputs.image-tag }}
       FE_APP_ENV: |
@@ -315,8 +313,6 @@ jobs:
     if: ${{ needs.set-image-tag.outputs.env != '' }}
     with:
       AWS_REGION: ap-northeast-2
-      ECR_REPO_URL: 863067839821.dkr.ecr.ap-northeast-2.amazonaws.com
-      ROLE_ARN: arn:aws:iam::863067839821:role/assume-role-surffy-dev
       ECR_REPO_NAME: fe-app
       IMAGE_TAG: ${{ needs.set-image-tag.outputs.image-tag }}
       FE_APP_ENV: |
