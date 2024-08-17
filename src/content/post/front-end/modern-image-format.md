@@ -7,23 +7,7 @@ type: Post
 
 웹 성능을 향상시키기 위해 이미지를 최적화하는 방법에는 여러가지가 있습니다. 오늘은 그 중에서 현대적인 이미지 포맷을 사용하여 이미지를 최적화하는 방법에 대해 알아보겠습니다.
 
-# 이미지 최적화란?
-
-> 최적화란 **이미지의 품질은 유지하면서 파일 크기를 줄여 파일이 빠르게 로드되도록 만드는 프로세스**를 말합니다. 사이트에서 사용하려고 업로드하기 전에 최적화하지 않은 이미지는 사이트의 로드 속도를 떨어뜨려 방문자가 사이트에서 나가는 원인이 될 수 있습니다.
-
-출처 : https://wordpress.com/ko/support/media/image-optimization/
-
-# 최적화하지 않은 이미지의 예
-
-그렇다면 어떤 경우에 최적화하지 않은 이미지라고 할 수 있을까요?
-
-<img src="https://en-support.files.wordpress.com/2018/01/truck-in-field.jpeg" width="400"/>
-
-위 이미지는 실제 2048\*1286 사이즈의 이미지를 사용하여 너비 400 픽셀의 이미지 요소를 구현했습니다. 이 이미지의 실제 용량은 무려 1.1MB입니다. 브라우저는 고작 400 픽셀 너비의 이미지를 렌더링하기 위해 1.1MB 크기의 거대한 이미지를 요청하게 됩니다. 이미지의 용량이 클수록 네트워크 요청 시간은 길어지고, 사용자들은 화면이 렌더링될 떄까지 더 긴 시간을 기다려야 하게 되므로 사용자 경험을 해치게 되겠죠.
-
 # 이미지 포맷의 종류와 특성
-
-웹 개발 시 가장 많이 사용되는 이미지 포맷들에 대해 살펴보고, 특히 그 중에서
 
 ### 1) png
 
@@ -69,10 +53,14 @@ JPEG 파일은 PNG와 마찬가지로 대부분의 브라우저, 소프트웨어
 - MIME type : `image/webp`
 - 파일 확장자 : `.webp`
 
+이미지와 애니메이션 이미지 모두에 탁월한 선택입니다. VP8 비디오 포맷을 기반으로 한 이미지 포맷으로, 손실 및 무손실 압축, 애니메이션, 알파 투명도를 지원합니다. WebP는 일반적으로 JPEG, PNG, GIF보다 더 나은 압축을 제공하며, 이들을 대체하기 위해 설계되었습니다. AVIF와 JPEG XL은 WebP를 대체하기 위해 설계된 포맷입니다. AVIF는 약간 더 나은 압축을 제공하지만, 브라우저 지원이 부족하고 점진적 렌더링(progressive rendering)을 지원하지 않습니다.
+
 #### Can I use webp?
 
 <img src="/public/images/post/front-end/modern-image-format/05.png"/>
 <img src="/public/images/post/front-end/modern-image-format/06.png"/>
+
+'Can I Use'를 살펴보니 전세계 사용량 기준으로 98.52%의 환경이 webP를 지원하는 브라우저 환경임을 알 수 있습니다.
 
 ### 4) avif
 
@@ -80,17 +68,76 @@ JPEG 파일은 PNG와 마찬가지로 대부분의 브라우저, 소프트웨어
 - MIME type : `image/avif`
 - 파일 확장자 : `.avif`
 
-높은 성능과 로열티 없는 이미지 포맷으로, PNG나 JPEG보다 훨씬 더 나은 압축을 제공하며, 높은 색상 깊이, 애니메이션 프레임, 투명도 등을 지원합니다.
+AV1 비디오 포맷을 기반으로 한 현대적인 이미지 포맷입니다. AVIF는 일반적으로 WebP, JPEG, PNG, GIF보다 더 나은 압축을 제공하며, 이들을 대체하기 위해 설계되었습니다. 높은 색상 깊이, 애니메이션 프레임, 투명도 등을 지원합니다.
 
 #### Can I use avif?
 
 <img src="/public/images/post/front-end/modern-image-format/02.png"/>
 <img src="/public/images/post/front-end/modern-image-format/01.png"/>
 
-'Can I Use'에서 살펴본 avif의 브라우저 지원 여부에서 가장 구 버전의 chrome 버전을 아래와 같이 확인해보면 2020년에 출시된 버전으로 매우 최신 브라우저부터 지원하고 있는 것을 확인할 수 있습니다.
+> Since January 2024, this feature works across the latest devices and major browser versions.
 
-# 이미지 포맷 종류별 비교
+2024년 1월에 최신 기기와 주요 브라우저의 최신 버전에서 작동한다고 하는데, 표준적인 웹 환경에서 전반적으로 지원되기 시작한지 얼마 안 된 따끈따끈한 이미지 형식이라는 걸 알 수 있습니다.
 
+# \<picture>로 브라우저 환경에 맞는 이미지 제공하기
+
+해상도, 미디어 쿼리, 특정 이미지 포맷 지원 여부를 기반으로 사용자 에이전트가 사용자에게 어떤 이미지 리소스를 제공할지 제어하는 반응형 이미지 방법입니다.
+
+`<picture>` HTML 요소는 다양한 디스플레이/장치 시나리오에 맞춰 대체 이미지 버전을 제공하기 위해 `<source>` 요소와 `<img>` 요소를 포함합니다. 브라우저는 각 `<source>` 요소를 평가해 최적의 이미지를 선택하며, 지원되지 않는 경우 `<img>` 요소의 src 속성에 지정된 URL을 사용합니다.
+
+### Can I Use \<picture>?
+
+<img src="/public/images/post/front-end/modern-image-format/07.png"/>
+<img src="/public/images/post/front-end/modern-image-format/08.png"/>
+
+'Can I Use'에서 `<picture>` 태그의 브라우저 호환성을 살펴보니 일부 브라우저에서 지원하지 않는 것을 볼 수 있습니다. 그렇다면 이미지 브라우저 호환성을 위해 사용하는 `<picture>`가 모든 브라우저를 커버하지 않는다면 이게 무슨 소용인가? 할 수 있겠지만, 이런 경우를 위해 `<img>` 태그가 중요한 역할을 한다고 합니다. `<img>` 요소는 `<picture>` 요소를 지원하지 않는 브라우저에서도 사용되므로, 브라우저 호환성에 대해 걱정할 필요가 없습니다.
+
+### \<img>의 목적
+
+1. 이미지의 사이즈나 다른 속성들을 표한하기 위해
+2. `<source>`로 제공된 이미지 중 사용가능한 것이 없을 때 대체 이미지로 사용하기 위해
+
+### media 속성
+
+media 속성은 미디어 조건을 지정합니다. `<source>`의 미디어 조건이 거짓으로 평가되면, 브라우저는 이를 건너뛰고 `<picture>` 내의 다음 요소를 평가합니다.
+
+```html
+<picture>
+  <source srcset="mdn-logo-wide.png" media="(min-width: 600px)" />
+  <img src="mdn-logo-narrow.png" alt="MDN" />
+</picture>
+```
+
+### srcset 속성
+
+크기 또는 디스플레이의 픽셀 밀도에 따라 선택할 수 있는 이미지 목록을 제공합니다. 표준 해상도와 고밀도 해상도에서 사용될 이미지를 각각 지정할 수 있습니다.
+
+```html
+<picture>
+  <source srcset="logo.png, logo-1.5x.png 1.5x" />
+  <img src="logo.png" alt="MDN Web Docs logo" height="320" width="320" />
+</picture>
+```
+
+### type 속성
+
+`<source>` 요소의 srcset 속성에 있는 리소스 URL에 대한 MIME 타입을 지정합니다. 사용자 에이전트가 지정된 타입을 지원하지 않으면, `<source>` 요소는 건너뛰어집니다.
+
+```html
+<picture>
+  <source srcset="photo.avif" type="image/avif" />
+  <source srcset="photo.webp" type="image/webp" />
+  <img src="photo.jpg" alt="photo" />
+</picture>
+```
+
+# 글을 맺으며
+
+이렇게 'Can I Use' 홈페이지를 자세히 뜯어본 것은 처음인데요. 현대적인 이미지 포맷을 활용하여 웹 성능을 최적화하고 브라우저 호환성을 고려하여 개발하는 방법에 대해 알게 되었습니다. 웹 개발자로서 다양한 브라우저 환경을 고려하여 모든 사용자들에게 최적의 사용자 경험을 제공하는 것이 중요하다는 것을 새삼 깨달았습니다. 앞으로 이미지를 다룰 떄는 오늘 공부한 내용을 적용하여 사용자에게 더 나은 경험을 제공할 수 있도록 해야겠습니다!
+
+<br/>
+<br/>
+<br/>
 참고글
 
 - https://gusrb3164.github.io/web/2021/11/26/browser-image-optimzing/
