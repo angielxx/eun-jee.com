@@ -1,5 +1,5 @@
 ---
-title: '브라우저 호환성을 고려한 이미지 최적화 (feat. webP, avif)'
+title: "브라우저 호환성을 고려한 이미지 최적화 (feat. webP, avif)"
 description: 현대적인 이미지 포맷을 활용하여 웹 성능을 최적화하는 방법을 알아봅니다.
 date: 2024-08-14
 type: Post
@@ -19,12 +19,12 @@ type: Post
 
 <img src="https://en-support.files.wordpress.com/2018/01/truck-in-field.jpeg" width="400"/>
 
-위 이미지는 실제 2048*1286 사이즈의 이미지를 사용하여 너비 400 픽셀의 이미지 요소를 구현했습니다. 이 이미지의 실제 용량은 무려 1.1MB입니다. 브라우저는 고작 400 픽셀 너비의 이미지를 렌더링하기 위해 1.1MB 크기의 거대한 이미지를 요청하게 됩니다. 이미지의 용량이 클수록 네트워크 요청 시간은 길어지고, 사용자들은 화면이 렌더링될 떄까지 더 긴 시간을 기다려야 하게 되므로 사용자 경험을 해치게 되겠죠.
-
+위 이미지는 실제 2048\*1286 사이즈의 이미지를 사용하여 너비 400 픽셀의 이미지 요소를 구현했습니다. 이 이미지의 실제 용량은 무려 1.1MB입니다. 브라우저는 고작 400 픽셀 너비의 이미지를 렌더링하기 위해 1.1MB 크기의 거대한 이미지를 요청하게 됩니다. 이미지의 용량이 클수록 네트워크 요청 시간은 길어지고, 사용자들은 화면이 렌더링될 떄까지 더 긴 시간을 기다려야 하게 되므로 사용자 경험을 해치게 되겠죠.
 
 # 이미지 포맷의 종류와 특성
 
 참고글
+
 - https://gusrb3164.github.io/web/2021/11/26/browser-image-optimzing/
 - https://developer.mozilla.org/en-US/docs/Web/HTML/Element/picture
 - https://developer.mozilla.org/en-US/docs/Web/Media/Formats/Image_types
