@@ -19,8 +19,8 @@ PNG는 원본 이미지의 정확한 재현이 필요하거나 투명도가 요�
 
 #### Can I use png?
 
-<img src="/public/images/post/front-end/modern-image-format/04.png"/>
-<img src="/public/images/post/front-end/modern-image-format/03.png"/>
+<img src="/images/post/front-end/modern-image-format/04.png"/>
+<img src="/images/post/front-end/modern-image-format/03.png"/>
 
 전통적인 이미지 포맷 답게 대부분의 브라우저를 지원하고 있는 모습입니다. 놀랍게도 아주 오래된 인터넷 익스플로러 6버전 이하에서는 지원하지 않는 것을 볼 수 있네요. 다행히도 인터넷 익스플로러 6버전 이하는 글로벌 사용량이 0%로 나오네요.
 
@@ -57,8 +57,8 @@ JPEG 파일은 PNG와 마찬가지로 대부분의 브라우저, 소프트웨어
 
 #### Can I use webp?
 
-<img src="/public/images/post/front-end/modern-image-format/05.png"/>
-<img src="/public/images/post/front-end/modern-image-format/06.png"/>
+<img src="/images/post/front-end/modern-image-format/05.png"/>
+<img src="/images/post/front-end/modern-image-format/06.png"/>
 
 'Can I Use'를 살펴보니 전세계 사용량 기준으로 98.52%의 환경이 webP를 지원하는 브라우저 환경임을 알 수 있습니다.
 
@@ -72,8 +72,8 @@ AV1 비디오 포맷을 기반으로 한 현대적인 이미지 포맷입니다.
 
 #### Can I use avif?
 
-<img src="/public/images/post/front-end/modern-image-format/02.png"/>
-<img src="/public/images/post/front-end/modern-image-format/01.png"/>
+<img src="/images/post/front-end/modern-image-format/02.png"/>
+<img src="/images/post/front-end/modern-image-format/01.png"/>
 
 > Since January 2024, this feature works across the latest devices and major browser versions.
 
@@ -87,8 +87,8 @@ AV1 비디오 포맷을 기반으로 한 현대적인 이미지 포맷입니다.
 
 ### Can I Use \<picture>?
 
-<img src="/public/images/post/front-end/modern-image-format/07.png"/>
-<img src="/public/images/post/front-end/modern-image-format/08.png"/>
+<img src="/images/post/front-end/modern-image-format/07.png"/>
+<img src="/images/post/front-end/modern-image-format/08.png"/>
 
 'Can I Use'에서 `<picture>` 태그의 브라우저 호환성을 살펴보니 일부 브라우저에서 지원하지 않는 것을 볼 수 있습니다. 그렇다면 이미지 브라우저 호환성을 위해 사용하는 `<picture>`가 모든 브라우저를 커버하지 않는다면 이게 무슨 소용인가? 할 수 있겠지만, 이런 경우를 위해 `<img>` 태그가 중요한 역할을 한다고 합니다. `<img>` 요소는 `<picture>` 요소를 지원하지 않는 브라우저에서도 사용되므로, 브라우저 호환성에 대해 걱정할 필요가 없습니다.
 
